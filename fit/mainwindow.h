@@ -38,7 +38,7 @@ public:
 private:
     void synchroCurrentFiles();
     void connexions();
-	void setGraphicStyle(int = 0);
+    void setGraphicStyle(int = 0);
     void checkUpdate(bool verbose);
 
 private slots:
@@ -88,8 +88,8 @@ private:
 
     bool psidelta;
 
-	QColor m_colors[2][7];
-	int m_st;
+    QColor m_colors[2][7];
+    int m_st;
 };
 
 #endif // MAINWINDOW_H

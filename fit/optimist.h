@@ -30,68 +30,68 @@ namespace Ui {
 class Optimist : public QWidget {
     Q_OBJECT
 public:
-	Optimist(XYScatterplot *rsp, XYScatterplot *isp, QWidget *parent = 0, Qt::WindowFlags f = 0);
+    Optimist(XYScatterplot *rsp, XYScatterplot *isp, QWidget *parent = 0, Qt::WindowFlags f = 0);
     ~Optimist();
 
-	static qreal coefficientOfDetermination(const QList<QPointF> &real, const QList<QPointF> &imag, const Parameters &para);
+    static qreal coefficientOfDetermination(const QList<QPointF> &real, const QList<QPointF> &imag, const Parameters &para);
 
 signals:
-	void parameterFind(Parameters para);
-	void optimizationRun(bool);
+    void parameterFind(Parameters para);
+    void optimizationRun(bool);
 
 protected:
     void changeEvent(QEvent *e);
 
 private:
-	void startThreads();
-	void stopThreads();
+    void startThreads();
+    void stopThreads();
 
     Ui::Optimist *ui;
-	XYScatterplot *m_rsp;
-	XYScatterplot *m_isp;
-	QList<OptiThread *> threads;
+    XYScatterplot *m_rsp;
+    XYScatterplot *m_isp;
+    QList<OptiThread *> threads;
 
-	QTimer *m_timer;
+    QTimer *m_timer;
 
 private slots:
-	void on_pushButton_clicked();
-	void refreshStats();
+    void on_pushButton_clicked();
+    void refreshStats();
 };
 
 inline qreal random(qreal min, qreal max);
 
 class OptiThread : public QThread {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	OptiThread(XYScatterplot *rsp, XYScatterplot *isp, const Parameters &pref, const Parameters &pdel, bool qa, QObject * parent = 0);
-	void stop();
+    OptiThread(XYScatterplot *rsp, XYScatterplot *isp, const Parameters &pref, const Parameters &pdel, bool qa, QObject * parent = 0);
+    void stop();
 
-	static Parameters getTheBestParameters();
+    static Parameters getTheBestParameters();
 
-	static Parameters s_bestpar;
-	static qreal s_bstR2;
-	static uint s_tests;
-	static uint s_goods;
+    static Parameters s_bestpar;
+    static qreal s_bstR2;
+    static uint s_tests;
+    static uint s_goods;
 
 
 signals:
-	void optfind();
+    void optfind();
 
 protected:
-	void run();
+    void run();
 
 private:
-	void makeMinMax(Parameters &pmin, Parameters &pmax);
+    void makeMinMax(Parameters &pmin, Parameters &pmax);
 
-	QList<QPointF> m_rsp;
-	QList<QPointF> m_isp;
-	Parameters m_pRef;
-	Parameters m_pDel;
-	bool m_qa;
+    QList<QPointF> m_rsp;
+    QList<QPointF> m_isp;
+    Parameters m_pRef;
+    Parameters m_pDel;
+    bool m_qa;
 
-	bool m_run;
+    bool m_run;
 
-	static QMutex s_mutex;
+    static QMutex s_mutex;
 };
 
 #endif // OPTIMIST_H

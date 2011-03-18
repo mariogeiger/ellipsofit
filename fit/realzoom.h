@@ -20,69 +20,69 @@
 class RealZoom
 {
 public:
-	RealZoom();
-	RealZoom(qreal xMin, qreal xMax, qreal yMin, qreal yMax);
-	inline qreal xMin() const;
-	inline qreal xMax() const;
-	inline qreal yMin() const;
-	inline qreal yMax() const;
-	inline qreal width() const;
-	inline qreal height() const;
+    RealZoom();
+    RealZoom(qreal xMin, qreal xMax, qreal yMin, qreal yMax);
+    inline qreal xMin() const;
+    inline qreal xMax() const;
+    inline qreal yMin() const;
+    inline qreal yMax() const;
+    inline qreal width() const;
+    inline qreal height() const;
 
-//	inline qreal &rxMin();
-//	inline qreal &rxMax();
-//	inline qreal &ryMin();
-//	inline qreal &ryMax();
-	inline void setXMin(qreal);
-	inline void setXMax(qreal);
-	inline void setYMin(qreal);
-	inline void setYMax(qreal);
+    //	inline qreal &rxMin();
+    //	inline qreal &rxMax();
+    //	inline qreal &ryMin();
+    //	inline qreal &ryMax();
+    inline void setXMin(qreal);
+    inline void setXMax(qreal);
+    inline void setYMin(qreal);
+    inline void setYMax(qreal);
 
 private:
-	qreal _xmin;
-	qreal _xmax;
-	qreal _ymin;
-	qreal _ymax;
-	qreal _width;
-	qreal _height;
+    qreal _xmin;
+    qreal _xmax;
+    qreal _ymin;
+    qreal _ymax;
+    qreal _width;
+    qreal _height;
 };
 
 inline RealZoom::RealZoom()
-	: _xmin(-10.0), _xmax(10.0), _ymin(-10.0), _ymax(10.0)
+    : _xmin(-10.0), _xmax(10.0), _ymin(-10.0), _ymax(10.0)
 {
-	_width = _xmax - _xmin;
-	_height = _ymax - _ymin;
+    _width = _xmax - _xmin;
+    _height = _ymax - _ymin;
 }
 
 inline RealZoom::RealZoom(qreal xMin, qreal xMax, qreal yMin, qreal yMax)
-	: _xmin(xMin), _xmax(xMax), _ymin(yMin), _ymax(yMax)
+    : _xmin(xMin), _xmax(xMax), _ymin(yMin), _ymax(yMax)
 {
-	_width = _xmax - _xmin;
-	_height = _ymax - _ymin;
+    _width = _xmax - _xmin;
+    _height = _ymax - _ymin;
 }
 
 inline qreal RealZoom::xMin() const {
-	return _xmin;
+    return _xmin;
 }
 
 inline qreal RealZoom::xMax() const {
-	return _xmax;
+    return _xmax;
 }
 
 inline qreal RealZoom::yMin() const {
-	return _ymin;
+    return _ymin;
 }
 
 inline qreal RealZoom::yMax() const {
-	return _ymax;
+    return _ymax;
 }
 
 inline qreal RealZoom::width() const {
-	return _width;
+    return _width;
 }
 
 inline qreal RealZoom::height() const {
-	return _height;
+    return _height;
 }
 
 //inline qreal &RealZoom::rxMin() {
@@ -102,23 +102,23 @@ inline qreal RealZoom::height() const {
 //}
 
 inline void RealZoom::setXMin(qreal x) {
-	_xmin = x;
-	_width = _xmax - _xmin;
+    _xmin = x;
+    _width = _xmax - _xmin;
 }
 
 inline void RealZoom::setXMax(qreal x) {
-	_xmax = x;
-	_width = _xmax - _xmin;
+    _xmax = x;
+    _width = _xmax - _xmin;
 }
 
 inline void RealZoom::setYMin(qreal y) {
-	_ymin = y;
-	_height = _ymax - _ymin;
+    _ymin = y;
+    _height = _ymax - _ymin;
 }
 
 inline void RealZoom::setYMax(qreal y) {
-	_ymax = y;
-	_height = _ymax - _ymin;
+    _ymax = y;
+    _height = _ymax - _ymin;
 }
 
 #endif // REALZOOM_H

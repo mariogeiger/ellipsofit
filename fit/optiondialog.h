@@ -24,23 +24,23 @@ namespace Ui {
 
 class ColorButton : public QPushButton
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	explicit ColorButton(QWidget * parent = 0)
-		: QPushButton(parent)
-	{
-		this->setMouseTracking(true);
-	}
+    explicit ColorButton(QWidget * parent = 0)
+        : QPushButton(parent)
+    {
+        this->setMouseTracking(true);
+    }
 
 signals:
-	void mouseMove();
+    void mouseMove();
 
 protected:
-	virtual void mouseMoveEvent(QMouseEvent *)
-	{
-		emit mouseMove();
-	}
+    virtual void mouseMoveEvent(QMouseEvent *)
+    {
+        emit mouseMove();
+    }
 };
 
 class OptionDialog : public QDialog
@@ -54,28 +54,28 @@ public:
     void setPsiDelta(bool);
     bool psiDelta() const;
 
-	void setColor(int st, int id, QColor);
-	QColor color(int st, int id) const;
+    void setColor(int st, int id, QColor);
+    QColor color(int st, int id) const;
 
-	void setBlindZoom(bool);
-	bool blindZoom() const;
+    void setBlindZoom(bool);
+    bool blindZoom() const;
 
 signals:
-	void colorChanged();
+    void colorChanged();
 
 protected:
     void changeEvent(QEvent *e);
 
 private:
     Ui::OptionDialog *ui;
-	QColor colors[2][7];
-	ColorButton *colorButtons[2][7];
+    QColor colors[2][7];
+    ColorButton *colorButtons[2][7];
 
-	QTimer *timer;
+    QTimer *timer;
 
 private slots:
     void buttonColorClicked();
-	void displayInfo();
+    void displayInfo();
 };
 
 #endif // OPTIONDIALOG_H

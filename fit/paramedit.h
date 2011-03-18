@@ -22,26 +22,26 @@ class QStandardItemModel;
 class QItemSelectionModel;
 
 namespace Ui {
-	class Paramedit;
+    class Paramedit;
 }
 
 class Paramedit : public QWidget {
     Q_OBJECT
 public:
-	Paramedit(QWidget *parent = 0);
-	~Paramedit();
-	QString nbrOfCharge() const;
-	QString relaxTime() const;
-	QString opticResistivity() const;
+    Paramedit(QWidget *parent = 0);
+    ~Paramedit();
+    QString nbrOfCharge() const;
+    QString relaxTime() const;
+    QString opticResistivity() const;
 
 public slots:
-	void setParameters(Parameters p);
+    void setParameters(Parameters p);
 
 protected:
     void changeEvent(QEvent *e);
 
 private:
-	Ui::Paramedit *ui;
+    Ui::Paramedit *ui;
 
 private slots:
     void on_pushButton_del_clicked();
