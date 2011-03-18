@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/img">
+        <file>rainbow.png</file>
+        <file>open-icon.png</file>
+        <file>PDF-icon.png</file>
+        <file>save-icon.png</file>
+        <file>quit-icon.png</file>
+        <file>data-icon.png</file>
+        <file>monitor-icon.png</file>
+        <file>opti-icon.png</file>
+        <file>earth-icon.png</file>
+        <file>about-icon.png</file>
+        <file>gear-icon.png</file>
+    </qresource>
+</RCC>

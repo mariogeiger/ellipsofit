@@ -1,0 +1,12 @@
+#! /bin/sh
+
+rm Makefile*
+cd fit
+rm Makefile*
+cd ../converter
+rm Makefile*
+cd ..
+
+echo "run qmake..."
+qmake
+

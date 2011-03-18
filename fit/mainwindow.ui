@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>500</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>EllipsoFit</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="data.qrc">
+    <normaloff>:/img/rainbow.png</normaloff>:/img/rainbow.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;table border=&quot;0&quot; style=&quot;-qt-table-type: root; margin-top:4px; margin-bottom:4px; margin-left:4px; margin-right:4px;&quot;&gt;
+&lt;tr&gt;
+&lt;td style=&quot;border: none;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Real&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="GraphicsView" name="graphicsViewReal">
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="horizontalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Imaginary&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="GraphicsView" name="graphicsViewImag">
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="horizontalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_File">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <addaction name="actionLoad_data"/>
+    <addaction name="actionOpen_results_file"/>
+    <addaction name="action_Save_results"/>
+    <addaction name="separator"/>
+    <addaction name="action_Print"/>
+    <addaction name="separator"/>
+    <addaction name="action_Quit"/>
+   </widget>
+   <widget class="QMenu" name="menu_Window">
+    <property name="title">
+     <string>&amp;Window</string>
+    </property>
+    <addaction name="action_Fullscreen"/>
+    <addaction name="separator"/>
+    <addaction name="actionOptimist_dock"/>
+   </widget>
+   <widget class="QMenu" name="menu_Help">
+    <property name="title">
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="actionCheck_update"/>
+    <addaction name="actionAbout_Ellipsofit"/>
+   </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>&amp;Tools</string>
+    </property>
+    <addaction name="action_Options"/>
+   </widget>
+   <addaction name="menu_File"/>
+   <addaction name="menu_Window"/>
+   <addaction name="menuTools"/>
+   <addaction name="menu_Help"/>
+  </widget>
+  <action name="actionLoad_data">
+   <property name="icon">
+    <iconset resource="data.qrc">
+     <normaloff>:/img/data-icon.png</normaloff>:/img/data-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Load &amp;data file...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+O</string>
+   </property>
+  </action>
+  <action name="action_Save_results">
+   <property name="icon">
+    <iconset resource="data.qrc">
+     <normaloff>:/img/save-icon.png</normaloff>:/img/save-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Save results...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="action_Quit">
+   <property name="icon">
+    <iconset resource="data.qrc">
+     <normaloff>:/img/quit-icon.png</normaloff>:/img/quit-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Quit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="action_Fullscreen">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="data.qrc">
+     <normaloff>:/img/monitor-icon.png</normaloff>:/img/monitor-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Fullscreen</string>
+   </property>
+   <property name="shortcut">
+    <string>F11</string>
+   </property>
+  </action>
+  <action name="actionOpen_results_file">
+   <property name="icon">
+    <iconset resource="data.qrc">
+     <normaloff>:/img/open-icon.png</normaloff>:/img/open-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Open &amp;results file...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="action_Print">
+   <property name="icon">
+    <iconset resource="data.qrc">
+     <normaloff>:/img/PDF-icon.png</normaloff>:/img/PDF-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Print as pdf...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
+   </property>
+  </action>
+  <action name="actionOptimist_dock">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="data.qrc">
+     <normaloff>:/img/opti-icon.png</normaloff>:/img/opti-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Optimist dock</string>
+   </property>
+  </action>
+  <action name="actionCheck_update">
+   <property name="icon">
+    <iconset resource="data.qrc">
+     <normaloff>:/img/earth-icon.png</normaloff>:/img/earth-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Check &amp;update...</string>
+   </property>
+  </action>
+  <action name="actionAbout_Ellipsofit">
+   <property name="icon">
+    <iconset resource="data.qrc">
+     <normaloff>:/img/about-icon.png</normaloff>:/img/about-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>About Ellipsofit...</string>
+   </property>
+  </action>
+  <action name="action_Options">
+   <property name="icon">
+    <iconset resource="data.qrc">
+     <normaloff>:/img/gear-icon.png</normaloff>:/img/gear-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Options...</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>GraphicsView</class>
+   <extends>QGraphicsView</extends>
+   <header>graphicsview.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="data.qrc"/>
+ </resources>
+ <connections/>
+</ui>

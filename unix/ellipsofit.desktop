@@ -1,0 +1,13 @@
+
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=Ellipsofit
+GenericName=ellipsofit
+Comment=
+Icon=/share/ellipsofit/rainbow.xpm
+Exec=ellipsofit-fit
+Terminal=false
+StartupNotify=false
+Categories=Education;Science;Physics;
+Name[fr_CH]=Ellipsofit
