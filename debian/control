@@ -1,7 +1,7 @@
 Source: ellipsofit
 Section: science
 Priority: extra
-Maintainer: Mario Geiger <mario.geiger@epfl.ch>
+Maintainer: Mario Geiger <geiger.mario@gmail.com>
 Build-Depends: debhelper (>= 7), autotools-dev, g++ (>= 4), libpthread-stubs0-dev, libpthread-stubs0, libqt4-dev (>= 4)
 Standards-Version: 3.8.3
 Homepage: http://setup.weeb.ch
