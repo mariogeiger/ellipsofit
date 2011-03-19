@@ -30,11 +30,11 @@ namespace Ui {
 class Optimist : public QWidget {
     Q_OBJECT
 public:
-    Optimist(XYScatterplot *realEpsilonData, XYScatterplot *imaginaryEpsilonData, XYScatterplot *reflexionData, QWidget *parent = 0, Qt::WindowFlags f = 0);
+    Optimist(XYScatterplot *realEpsilonData, XYScatterplot *imaginaryEpsilonData, XYScatterplot *reflectivityData, QWidget *parent = 0, Qt::WindowFlags f = 0);
     ~Optimist();
 
     static qreal coefficientOfDeterminationOfEllipsometry(const QList<QPointF> &real, const QList<QPointF> &imag, const Parameters &para);
-    static qreal coefficientOfDeterminationOfReflexion(const QList<QPointF> &reflexion, const Parameters &para);
+    static qreal coefficientOfDeterminationOfReflectivity(const QList<QPointF> &reflexion, const Parameters &para);
 
 signals:
     void parameterFind(Parameters para);
@@ -50,7 +50,7 @@ private:
     Ui::Optimist *ui;
     XYScatterplot *m_realEpsilonData;
     XYScatterplot *m_imaginaryEpsilonData;
-    XYScatterplot *m_reflexionData;
+    XYScatterplot *m_reflectivityData;
 
     QList<OptiThread *> threads;
 
@@ -88,7 +88,7 @@ private:
 
     QList<QPointF> m_realEpsilon;
     QList<QPointF> m_imaginaryEpsilon;
-    QList<QPointF> m_reflexion;
+    QList<QPointF> m_reflectivity;
 
     Parameters m_pRef;
     Parameters m_pDel;

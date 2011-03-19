@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     a.setOrganizationName("antigol");
     a.setOrganizationDomain("setup.weeb.ch");
     a.setApplicationName("EllipsoFit-Fit");
-        a.setApplicationVersion("0.5.03");
+    a.setApplicationVersion("0.6.00");
 
     qsrand(time(0));
 

@@ -19,7 +19,7 @@
 #include <QMutexLocker>
 #include <QSettings>
 
-Optimist::Optimist(XYScatterplot *realEpsilonData, XYScatterplot *imaginaryEpsilonData, XYScatterplot *reflexionData, QWidget *parent, Qt::WindowFlags f) :
+Optimist::Optimist(XYScatterplot *realEpsilonData, XYScatterplot *imaginaryEpsilonData, XYScatterplot *reflectivityData, QWidget *parent, Qt::WindowFlags f) :
         QWidget(parent, f),
         ui(new Ui::Optimist)
 {
@@ -27,7 +27,7 @@ Optimist::Optimist(XYScatterplot *realEpsilonData, XYScatterplot *imaginaryEpsil
 
     m_realEpsilonData = realEpsilonData;
     m_imaginaryEpsilonData = imaginaryEpsilonData;
-    m_reflexionData = reflexionData;
+    m_reflectivityData = reflectivityData;
 
     m_timer = new QTimer(this);
     connect(m_timer, SIGNAL(timeout()), this, SLOT(refreshStats()));
@@ -41,7 +41,7 @@ Optimist::Optimist(XYScatterplot *realEpsilonData, XYScatterplot *imaginaryEpsil
     ui->dsbFk->setValue(settings.value("optimist_dsbfk", 0.04).toReal());
     ui->dsbGk->setValue(settings.value("optimist_dsbgk", 0.04).toReal());
     ui->qa->setChecked(settings.value("optimist_qa", true).toBool());
-    ui->reflexionfit->setChecked(settings.value("optimist_reflexiontofit", false).toBool());
+    ui->reflectivityfit->setChecked(settings.value("optimist_reflectivityfit", false).toBool());
 }
 
 Optimist::~Optimist()
@@ -54,7 +54,7 @@ Optimist::~Optimist()
     settings.setValue("optimist_dsbfk", ui->dsbFk->value());
     settings.setValue("optimist_dsbgk", ui->dsbGk->value());
     settings.setValue("optimist_qa", ui->qa->isChecked());
-    settings.setValue("optimist_reflexiontofit", ui->reflexionfit->isChecked());
+    settings.setValue("optimist_reflectivityfit", ui->reflectivityfit->isChecked());
     delete ui;
 }
 
@@ -109,13 +109,13 @@ qreal Optimist::coefficientOfDeterminationOfEllipsometry(const QList<QPointF> &r
     return ((1.0 - sserrR / sstotR) + (1.0 - sserrI / sstotR)) / 2.0;
 }
 
-qreal Optimist::coefficientOfDeterminationOfReflexion(const QList<QPointF> &reflexion, const Parameters &para)
+qreal Optimist::coefficientOfDeterminationOfReflectivity(const QList<QPointF> &reflectivity, const Parameters &para)
 {
-    qreal n = reflexion.size();
+    qreal n = reflectivity.size();
     qreal average = 0.0;
 
-    for (int i = reflexion.size() - 1; i >= 0; --i) {
-        average += reflexion[i].y();
+    for (int i = reflectivity.size() - 1; i >= 0; --i) {
+        average += reflectivity[i].y();
     }
     average /= n;
 
@@ -123,11 +123,11 @@ qreal Optimist::coefficientOfDeterminationOfReflexion(const QList<QPointF> &refl
     qreal sserr = 0.0;
 
     qreal tmp;
-    for (int i = reflexion.size() - 1; i >= 0; --i) {
-        tmp = reflexion[i].y() - average;
+    for (int i = reflectivity.size() - 1; i >= 0; --i) {
+        tmp = reflectivity[i].y() - average;
         sstot += tmp * tmp;
 
-        tmp = reflexion[i].y() - mathReflexion(reflexion[i].x(), para);
+        tmp = reflectivity[i].y() - mathReflectivity(reflectivity[i].x(), para);
         sserr += tmp * tmp;
     }
 
@@ -138,7 +138,7 @@ void Optimist::on_pushButton_clicked()
 {
     ui->tab_2->setDisabled(threads.isEmpty());
     ui->qa->setDisabled(threads.isEmpty());
-    ui->reflexionfit->setDisabled(threads.isEmpty());
+    ui->reflectivityfit->setDisabled(threads.isEmpty());
 
     if (threads.isEmpty()) {
         ui->pushButton->setText(tr("Stop"));
@@ -169,8 +169,8 @@ void Optimist::startThreads()
     emit optimizationRun(true);
 
     OptiThread::s_bstR2 = Optimist::coefficientOfDeterminationOfEllipsometry(m_realEpsilonData->getPoints(), m_imaginaryEpsilonData->getPoints(), parameters);
-    if (ui->reflexionfit->isChecked()) {
-        OptiThread::s_bstR2 += Optimist::coefficientOfDeterminationOfReflexion(m_reflexionData->getPoints(), parameters);
+    if (ui->reflectivityfit->isChecked()) {
+        OptiThread::s_bstR2 += Optimist::coefficientOfDeterminationOfReflectivity(m_reflectivityData->getPoints(), parameters);
         OptiThread::s_bstR2 /= 2.0;
     }
 
@@ -191,7 +191,7 @@ void Optimist::startThreads()
     OptiThread::s_goods = 0;
     int cpu = ncpu();
     for (int i = 0; i < cpu; ++i) {
-        OptiThread *thr = new OptiThread(m_realEpsilonData, m_imaginaryEpsilonData, m_reflexionData, OptiThread::s_bestpar, pDel, ui->qa->isChecked(), ui->reflexionfit->isChecked());
+        OptiThread *thr = new OptiThread(m_realEpsilonData, m_imaginaryEpsilonData, m_reflectivityData, OptiThread::s_bestpar, pDel, ui->qa->isChecked(), ui->reflectivityfit->isChecked());
         thr->start();
         threads.append(thr);
     }
@@ -225,17 +225,17 @@ quint32 OptiThread::s_goods;
 quint32 OptiThread::s_tests;
 
 
-OptiThread::OptiThread(XYScatterplot *realEpsilon, XYScatterplot *imaginaryEpsilon, XYScatterplot *reflexion, const Parameters &pref, const Parameters &pdel, bool qa, bool withReflexion, QObject *parent) :
+OptiThread::OptiThread(XYScatterplot *realEpsilon, XYScatterplot *imaginaryEpsilon, XYScatterplot *reflectivity, const Parameters &pref, const Parameters &pdel, bool qa, bool withReflectivity, QObject *parent) :
         QThread(parent)
 {
     m_realEpsilon = realEpsilon->getPoints();
     m_imaginaryEpsilon = imaginaryEpsilon->getPoints();
-    m_reflexion = reflexion->getPoints();
+    m_reflectivity = reflectivity->getPoints();
 
     m_pRef = pref;
     m_pDel = pdel;
     m_qa = qa;
-    m_useReflexion = withReflexion;
+    m_useReflexion = withReflectivity;
 }
 
 Parameters OptiThread::getTheBestParameters()
@@ -292,7 +292,7 @@ void OptiThread::run()
 
         qreal r2 = Optimist::coefficientOfDeterminationOfEllipsometry(m_realEpsilon, m_imaginaryEpsilon, pCur);
         if (m_useReflexion) {
-            r2 += Optimist::coefficientOfDeterminationOfReflexion(m_reflexion, pCur);
+            r2 += Optimist::coefficientOfDeterminationOfReflectivity(m_reflectivity, pCur);
             r2 /= 2.0;
         }
 

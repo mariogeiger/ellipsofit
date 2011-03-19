@@ -72,10 +72,10 @@ qreal mathImagFun(qreal e, const Parameters &p)
 
 
 //==============================================================
-// MATHEMATIC - REFLEXION
+// MATHEMATIC - Reflectivity
 //==============================================================
 
-qreal mathReflexion(qreal e, const Parameters &p)
+qreal mathReflectivity(qreal e, const Parameters &p)
 {
     const qreal epsilon1 = mathRealFun(e, p);
     const qreal epsilon2 = mathImagFun(e, p);
@@ -199,7 +199,7 @@ void XYImagLaurentian::setNo(int n)
 
 
 //==============================================================
-// GRAPHIC - REFLEXION
+// GRAPHIC - REFLECTIVITY
 //==============================================================
 
 XYReflFun::XYReflFun(const Parameters &parameters, const QPen &pen)
@@ -210,5 +210,5 @@ XYReflFun::XYReflFun(const Parameters &parameters, const QPen &pen)
 
 qreal XYReflFun::y(qreal x) const
 {
-    return mathReflexion(x, p);
+    return mathReflectivity(x, p);
 }

@@ -32,7 +32,7 @@ public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
     bool loadEllipsometryData(const QString &file);
-    bool loadReflexionData(const QString &file);
+    bool loadReflectivityData(const QString &file);
     bool saveResults(const QString &file);
     bool openResults(const QString &file);
 
@@ -43,7 +43,6 @@ private:
     void checkUpdate(bool verbose);
 
 private slots:
-    void on_actionClear_reflexion_data_triggered();
     void on_action_Options_triggered();
     void on_actionAbout_Ellipsofit_triggered();
     void on_actionCheck_update_triggered();
@@ -60,7 +59,8 @@ private slots:
     void on_action_Fullscreen_triggered(bool checked);
     void on_action_Save_results_triggered();
     void on_actionLoad_data_triggered();
-    void on_actionLoad_reflexion_file_triggered();
+    void on_actionLoad_reflectivity_file_triggered();
+    void on_actionClear_reflectivity_data_triggered();
 
 private:
     Ui::MainWindow *ui;
@@ -74,7 +74,7 @@ private:
     QDockWidget *m_dockOptimist;
 
     QString m_currentEllipsometryFile;
-    QString m_currentReflexionFile;
+    QString m_currentReflectivityFile;
     QString m_currentOpenFile;
     QString m_currentSaveFile;
     QString m_currentPrintFile;

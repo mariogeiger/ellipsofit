@@ -52,9 +52,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="reflexionfit">
+        <widget class="QCheckBox" name="reflectivityfit">
          <property name="text">
-          <string>Use reflexion to fit</string>
+          <string>Use reflectivity to fit</string>
          </property>
         </widget>
        </item>

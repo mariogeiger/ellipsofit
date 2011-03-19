@@ -47,7 +47,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QSettings settings;
     m_currentEllipsometryFile = settings.value("currentEllipsometryFile").toString();
-    m_currentReflexionFile = settings.value("currentReflexionFile").toString();
+    m_currentReflectivityFile = settings.value("currentReflectivityFile").toString();
     m_currentOpenFile = settings.value("currentOpenFile").toString();
     m_currentSaveFile = settings.value("currentSaveFile").toString();
     m_currentPrintFile = settings.value("currentPrintFile").toString();
@@ -188,7 +188,7 @@ MainWindow::~MainWindow()
     QSettings settings;
     {
         settings.setValue("currentEllipsometryFile", m_currentEllipsometryFile);
-        settings.setValue("currentReflexionFile", m_currentReflexionFile);
+        settings.setValue("currentReflectivityFile", m_currentReflectivityFile);
         settings.setValue("currentOpenFile", m_currentOpenFile);
         settings.setValue("currentSaveFile", m_currentSaveFile);
         settings.setValue("currentPrintFile", m_currentPrintFile);
@@ -244,7 +244,6 @@ void MainWindow::checkUpdate(bool verbose)
         connect(m_http, SIGNAL(requestFinished(int,bool)), this, SLOT(httpRequestFinishedSilent(int,bool)));
 
 
-    QSettings().setValue("last_check_update", (uint)time(0));
     QBuffer *buffer = new QBuffer(&m_bufferData, m_http);
     if (buffer->open(QIODevice::ReadWrite))
         m_httpGetId = m_http->get(QString("http://setup.weeb.ch/update/ellipsofit.php%3Fversion=") +
@@ -264,6 +263,7 @@ bool MainWindow::httpRequestFinishedSilent(int requestId, bool error)
                 QDesktopServices::openUrl(QUrl(QString("http://setup.weeb.ch/update/ellipsofit.php")));
                 qApp->quit();
             }
+            QSettings().setValue("last_check_update", (uint)time(0));
         }
         m_http->deleteLater(); m_http = 0;
     }
@@ -354,7 +354,7 @@ bool MainWindow::loadEllipsometryData(const QString &file)
     return true;
 }
 
-bool MainWindow::loadReflexionData(const QString &file)
+bool MainWindow::loadReflectivityData(const QString &file)
 {
     QFile ifile(file);
     if (!ifile.open(QIODevice::Text | QIODevice::ReadOnly)) {
@@ -368,7 +368,7 @@ bool MainWindow::loadReflexionData(const QString &file)
 
     m_dataRefl->clear();
     for (int line = 1; !in.atEnd(); ++line) {
-        QPointF reflexion;
+        QPointF reflectivity;
         bool ok;
 
         QStringList split = in.readLine().split(QRegExp("[\\s;,:]"));
@@ -378,19 +378,19 @@ bool MainWindow::loadReflexionData(const QString &file)
             continue;
         }
 
-        reflexion.setX(split[0].toDouble(&ok));
+        reflectivity.setX(split[0].toDouble(&ok));
         if (!ok) {
             warnings.append(tr("at line %1 : cannot read the first column<br />\n").arg(line));
             continue;
         }
 
-        reflexion.setY(split[1].toDouble(&ok));
+        reflectivity.setY(split[1].toDouble(&ok));
         if (!ok) {
             warnings.append(tr("at line %1 : cannot read the second column<br />\n").arg(line));
             continue;
         }
 
-        m_dataRefl->append(reflexion);
+        m_dataRefl->append(reflectivity);
         ++goodline;
     }
 
@@ -421,8 +421,13 @@ bool MainWindow::saveResults(const QString &file)
     out << QString("# File created by ellipsoFit %1")
             .arg(QDateTime::currentDateTime().toString("yyyy-MM-ddThh:mm:ss")) << endl;
     out << "# ----------------------------------------------" << endl;
+
     if (QFileInfo(m_currentEllipsometryFile).isFile())
         out << "Ellipsometry file =\t" << m_currentEllipsometryFile << endl;
+
+    if (QFileInfo(m_currentReflectivityFile).isFile())
+        out << "Reflectivity file = \t" << m_currentReflectivityFile << endl;
+
     out << "Einf =\t" << QString::number(parameters.einf, 'g', 5) << endl;
     out << "Ep   =\t" << QString::number(parameters.ep, 'g', 5) << endl;
     out << "G    =\t" << QString::number(parameters.g, 'g', 5) << endl;
@@ -437,7 +442,7 @@ bool MainWindow::saveResults(const QString &file)
     out << "Rop =\t" << m_paramedit->opticResistivity() << " [uohm cm]" << endl;
     out << endl;
     out << QString("%1 points of the fit :").arg(nsave) << endl;
-    out << "Energy     \tReal value  \tImaginary value" << endl;
+    out << "Energy     \tReal value  \tImaginary value  \tReflectivity value" << endl;
     qreal x0 = qMin(m_sceneReal->zoom().xMin(), m_sceneImag->zoom().xMin());
     qreal delta = (qMax(m_sceneReal->zoom().xMax(), m_sceneImag->zoom().xMax()) - x0) / (qreal)nsave;
     for (int i = 0; i < nsave; ++i) {
@@ -445,11 +450,13 @@ bool MainWindow::saveResults(const QString &file)
         if (!m_funcReal->domain(x)) continue;
         const qreal yr = m_funcReal->y(x);
         const qreal yi = m_funcImag->y(x);
+        const qreal yrefl = m_funcRefl->y(x);
         out << QString::number(x, 'e', 5) << '\t' <<
                 QString::number(yr, 'e', 5) << '\t' <<
-                QString::number(yi, 'e', 5) << endl;
+                QString::number(yi, 'e', 5) << '\t' <<
+                QString::number(yrefl, 'e', 5) << endl;
     }
-    QMessageBox::information(this, tr("Well save"), tr("Parameters and function saved !"));
+    QMessageBox::information(this, tr("Well save"), tr("Parameters and functions saved !"));
     return true;
 }
 
@@ -464,7 +471,8 @@ bool MainWindow::openResults(const QString &file)
     QTextStream in(&ifile);
     Parameters p;
 
-    QString datafile;
+    QString ellipsometryfile;
+    QString reflectivityfile;
     Laurentian laur = {{0.0, 0.0, 0.0}};
     int laurArg;
     for (int linenumber = 1; !in.atEnd(); ++linenumber) {
@@ -473,13 +481,23 @@ bool MainWindow::openResults(const QString &file)
         laurArg = -1;
         QString line = in.readLine().simplified();
 
-        if (line.startsWith("Data file ")) {
-            datafile = line.section("=", 1).trimmed();
-            QFileInfo fi(datafile);
+        if (line.startsWith("Ellipsometry file ")) {
+            ellipsometryfile = line.section("=", 1).trimmed();
+            QFileInfo fi(ellipsometryfile);
             if (!fi.exists()) {
                 fi.setFile(QFileInfo(file).path(), fi.fileName());
                 if (fi.exists())
-                    datafile = fi.filePath();
+                    ellipsometryfile = fi.filePath();
+            }
+        }
+
+        if (line.startsWith("Reflectivity file ")) {
+            reflectivityfile = line.section("=", 1).trimmed();
+            QFileInfo fi(reflectivityfile);
+            if (!fi.exists()) {
+                fi.setFile(QFileInfo(file).path(), fi.fileName());
+                if (fi.exists())
+                    reflectivityfile = fi.filePath();
             }
         }
 
@@ -532,9 +550,13 @@ bool MainWindow::openResults(const QString &file)
 
     m_paramedit->setParameters(p);
 
-    if (!datafile.isEmpty())
-        if(loadEllipsometryData(datafile))
-            m_currentEllipsometryFile = datafile;
+    if (!ellipsometryfile.isEmpty())
+        if(loadEllipsometryData(ellipsometryfile))
+            m_currentEllipsometryFile = ellipsometryfile;
+
+    if (!reflectivityfile.isEmpty())
+        if (loadReflectivityData(reflectivityfile))
+            m_currentReflectivityFile = reflectivityfile;
 
     return true;
 }
@@ -737,23 +759,24 @@ void MainWindow::on_actionLoad_data_triggered()
     }
 }
 
-void MainWindow::on_actionLoad_reflexion_file_triggered()
+void MainWindow::on_actionLoad_reflectivity_file_triggered()
 {
     synchroCurrentFiles();
-    const QString file = QFileDialog::getOpenFileName(this, tr("Open reflexion file"), m_currentReflexionFile);
+    const QString file = QFileDialog::getOpenFileName(this, tr("Open reflectivity file"), m_currentReflectivityFile);
     if (file.isEmpty())
         return;
 
-    if (loadReflexionData(file)) {
+    if (loadReflectivityData(file)) {
         QFileInfo fileinfo(file);
-        m_currentReflexionFile = fileinfo.filePath();
+        m_currentReflectivityFile = fileinfo.filePath();
     }
 }
 
-void MainWindow::on_actionClear_reflexion_data_triggered()
+void MainWindow::on_actionClear_reflectivity_data_triggered()
 {
     m_dataRefl->clear();
     m_sceneRefl->regraph();
+    m_currentReflectivityFile.clear();
 }
 
 void MainWindow::on_action_Save_results_triggered()

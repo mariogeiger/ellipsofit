@@ -119,7 +119,7 @@ qreal mathImagFun(qreal e, const Parameters &p);
 
 
 //
-// Reflexion classes
+// Reflectivity classes
 //
 
 class XYReflFun : public XYEllipsoFun
@@ -129,7 +129,7 @@ public:
         virtual qreal y(qreal x) const;
 };
 
-qreal mathReflexion(qreal e, const Parameters &p);
+qreal mathReflectivity(qreal e, const Parameters &p);
 
 
 
