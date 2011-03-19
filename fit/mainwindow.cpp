@@ -46,7 +46,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     QSettings settings;
-    m_currentDataFile = settings.value("currentDataFile").toString();
+    m_currentEllipsometryFile = settings.value("currentEllipsometryFile").toString();
+    m_currentReflexionFile = settings.value("currentReflexionFile").toString();
     m_currentOpenFile = settings.value("currentOpenFile").toString();
     m_currentSaveFile = settings.value("currentSaveFile").toString();
     m_currentPrintFile = settings.value("currentPrintFile").toString();
@@ -77,27 +78,34 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_sceneReal = new XYScene(this);
     m_sceneImag = new XYScene(this);
+    m_sceneRefl = new XYScene(this);
 
     ui->graphicsViewReal->setScene(m_sceneReal);
     ui->graphicsViewImag->setScene(m_sceneImag);
+    ui->graphicsViewRefl->setScene(m_sceneRefl);
 
     m_sceneReal->setState(m_sceneReal->state() | XYScene::SendMouseMove);
-    m_sceneImag->setState(m_sceneReal->state() | XYScene::SendMouseMove);
+    m_sceneImag->setState(m_sceneImag->state() | XYScene::SendMouseMove);
+    m_sceneRefl->setState(m_sceneRefl->state() | XYScene::SendMouseMove);
     if (settings.value("horizontal_zoom_bind", false).toBool()) {
         m_sceneReal->setState(m_sceneReal->state() | XYScene::SendZoomChanged);
-        m_sceneImag->setState(m_sceneReal->state() | XYScene::SendZoomChanged);
+        m_sceneImag->setState(m_sceneImag->state() | XYScene::SendZoomChanged);
+        m_sceneRefl->setState(m_sceneRefl->state() | XYScene::SendZoomChanged);
     }
 
     m_sceneReal->setZoom(RealZoom(0.0, 6.5, -11.0, 11.0));
     m_sceneImag->setZoom(RealZoom(0.0, 6.5, 0.0, 22.0));
+    m_sceneRefl->setZoom(RealZoom(0.0, 6.5, 0.0, 1.0));
 
     m_dataReal = new XYScatterplot();
     m_dataImag = new XYScatterplot();
+    m_dataRefl = new XYScatterplot();
 
     m_funcReal = new XYRealFun(parameters);
     m_drudReal = new XYRealDrud(parameters);
     m_funcImag = new XYImagFun(parameters);
     m_drudImag = new XYImagDrud(parameters);
+    m_funcRefl = new XYReflFun(parameters);
 
     m_sceneReal->appendScatterplot(m_dataReal);
     m_sceneReal->appendFunction(m_drudReal); // draw in first the little
@@ -106,6 +114,9 @@ MainWindow::MainWindow(QWidget *parent) :
     m_sceneImag->appendScatterplot(m_dataImag);
     m_sceneImag->appendFunction(m_drudImag);
     m_sceneImag->appendFunction(m_funcImag);
+
+    m_sceneRefl->appendScatterplot(m_dataRefl);
+    m_sceneRefl->appendFunction(m_funcRefl);
 
     setGraphicStyle();
 
@@ -176,7 +187,8 @@ MainWindow::~MainWindow()
 {
     QSettings settings;
     {
-        settings.setValue("currentDataFile", m_currentDataFile);
+        settings.setValue("currentEllipsometryFile", m_currentEllipsometryFile);
+        settings.setValue("currentReflexionFile", m_currentReflexionFile);
         settings.setValue("currentOpenFile", m_currentOpenFile);
         settings.setValue("currentSaveFile", m_currentSaveFile);
         settings.setValue("currentPrintFile", m_currentPrintFile);
@@ -272,7 +284,7 @@ void MainWindow::httpRequestFinishedVerbose(int requestId, bool error)
     }
 }
 
-bool MainWindow::loadData(const QString &file)
+bool MainWindow::loadEllipsometryData(const QString &file)
 {
     QFile ifile(file);
     if (!ifile.open(QIODevice::Text | QIODevice::ReadOnly)) {
@@ -342,6 +354,55 @@ bool MainWindow::loadData(const QString &file)
     return true;
 }
 
+bool MainWindow::loadReflexionData(const QString &file)
+{
+    QFile ifile(file);
+    if (!ifile.open(QIODevice::Text | QIODevice::ReadOnly)) {
+        QMessageBox::critical(this, tr("Cannot open the file"), tr("<em>%1</em><br />\n%2").arg(file).arg(ifile.errorString()));
+        return false;
+    }
+
+    int goodline = 0;
+    QString warnings;
+    QTextStream in(&ifile);
+
+    m_dataRefl->clear();
+    for (int line = 1; !in.atEnd(); ++line) {
+        QPointF reflexion;
+        bool ok;
+
+        QStringList split = in.readLine().split(QRegExp("[\\s;,:]"));
+
+        if (split.size() < 2) {
+            warnings.append(tr("at line %1 : line too short<br />\n").arg(line));
+            continue;
+        }
+
+        reflexion.setX(split[0].toDouble(&ok));
+        if (!ok) {
+            warnings.append(tr("at line %1 : cannot read the first column<br />\n").arg(line));
+            continue;
+        }
+
+        reflexion.setY(split[1].toDouble(&ok));
+        if (!ok) {
+            warnings.append(tr("at line %1 : cannot read the second column<br />\n").arg(line));
+            continue;
+        }
+
+        m_dataRefl->append(reflexion);
+        ++goodline;
+    }
+
+    if (!warnings.isEmpty()) {
+        QMessageBox::warning(this, tr("Read errors"), tr("<em>%1</em><br />\n%2 points correctly read except :<br />\n%3").arg(file).arg(goodline).arg(warnings.left(1000)));
+    }
+
+    m_sceneRefl->regraph();
+
+    return true;
+}
+
 bool MainWindow::saveResults(const QString &file)
 {
     QFile ofile(file);
@@ -360,8 +421,8 @@ bool MainWindow::saveResults(const QString &file)
     out << QString("# File created by ellipsoFit %1")
             .arg(QDateTime::currentDateTime().toString("yyyy-MM-ddThh:mm:ss")) << endl;
     out << "# ----------------------------------------------" << endl;
-    if (QFileInfo(m_currentDataFile).isFile())
-        out << "Data file =\t" << m_currentDataFile << endl;
+    if (QFileInfo(m_currentEllipsometryFile).isFile())
+        out << "Ellipsometry file =\t" << m_currentEllipsometryFile << endl;
     out << "Einf =\t" << QString::number(parameters.einf, 'g', 5) << endl;
     out << "Ep   =\t" << QString::number(parameters.ep, 'g', 5) << endl;
     out << "G    =\t" << QString::number(parameters.g, 'g', 5) << endl;
@@ -472,8 +533,8 @@ bool MainWindow::openResults(const QString &file)
     m_paramedit->setParameters(p);
 
     if (!datafile.isEmpty())
-        if(loadData(datafile))
-            m_currentDataFile = datafile;
+        if(loadEllipsometryData(datafile))
+            m_currentEllipsometryFile = datafile;
 
     return true;
 }
@@ -481,7 +542,7 @@ bool MainWindow::openResults(const QString &file)
 void MainWindow::synchroCurrentFiles()
 {
     QString currentDir = QDir::homePath();
-    QFileInfo dataFile(m_currentDataFile);
+    QFileInfo dataFile(m_currentEllipsometryFile);
     QFileInfo openFile(m_currentOpenFile);
     QFileInfo saveFile(m_currentSaveFile);
     QFileInfo printFile(m_currentPrintFile);
@@ -500,7 +561,7 @@ void MainWindow::synchroCurrentFiles()
     }
 
     if (!dataFile.isFile()) {
-        m_currentDataFile = currentDir;
+        m_currentEllipsometryFile = currentDir;
     }
     if (!openFile.isFile()) {
         m_currentOpenFile = currentDir;
@@ -523,10 +584,12 @@ void MainWindow::connexions()
 
     connect(m_sceneReal, SIGNAL(zoomChanged()), this, SLOT(xysamexzoom()));
     connect(m_sceneImag, SIGNAL(zoomChanged()), this, SLOT(xysamexzoom()));
+    connect(m_sceneRefl, SIGNAL(zoomChanged()), this, SLOT(xysamexzoom()));
 
     connect(m_dockOptimist, SIGNAL(visibilityChanged(bool)), ui->actionOptimist_dock, SLOT(setChecked(bool)));
     connect(m_optimist, SIGNAL(parameterFind(Parameters)), m_sceneReal, SLOT(regraph()));
     connect(m_optimist, SIGNAL(parameterFind(Parameters)), m_sceneImag, SLOT(regraph()));
+    connect(m_optimist, SIGNAL(parameterFind(Parameters)), m_sceneRefl, SLOT(regraph()));
     connect(m_optimist, SIGNAL(parameterFind(Parameters)), m_paramedit, SLOT(setParameters(Parameters)));
 
     connect(m_optimist, SIGNAL(optimizationRun(bool)), this, SLOT(optimizationChangeState(bool)));
@@ -543,6 +606,8 @@ void MainWindow::setGraphicStyle(int st)
     m_sceneReal->setAxesPen(QPen(m_colors[st][3]));
     m_sceneReal->setZoomPen(QPen(m_colors[st][6]));
     m_sceneImag->setLook(m_sceneReal->look());
+    m_sceneRefl->setLook(m_sceneReal->look());
+
 
     m_dataReal->setPen(QPen(m_colors[st][1]));
     m_dataReal->setBrush(Qt::NoBrush);
@@ -552,10 +617,18 @@ void MainWindow::setGraphicStyle(int st)
     m_dataImag->setBrush(Qt::NoBrush);
     m_dataImag->setRadius(1.5);
 
+    m_dataRefl->setPen(QPen(m_colors[st][1]));
+    m_dataRefl->setBrush(Qt::NoBrush);
+    m_dataRefl->setRadius(1.5);
+
+
     m_funcReal->setPen(QPen(QBrush(m_colors[st][0]), 2));
     m_drudReal->setPen(QPen(m_colors[st][0].light(130)));
+
     m_funcImag->setPen(QPen(QBrush(m_colors[st][0]), 2));
     m_drudImag->setPen(QPen(m_colors[st][0].light(130)));
+
+    m_funcRefl->setPen(QPen(QBrush(m_colors[st][0]), 2));
 }
 
 void MainWindow::optimizationChangeState(bool run)
@@ -616,33 +689,35 @@ void MainWindow::functionGestion()
 
     m_sceneReal->regraph();
     m_sceneImag->regraph();
+    m_sceneRefl->regraph();
 }
 
 void MainWindow::xysamexzoom()
 {
     m_sceneImag->setState(m_sceneImag->state() & ~XYScene::SendZoomChanged);
     m_sceneReal->setState(m_sceneReal->state() & ~XYScene::SendZoomChanged);
+    m_sceneRefl->setState(m_sceneRefl->state() & ~XYScene::SendZoomChanged);
 
-    if (sender() == m_sceneReal) {
-        RealZoom z = m_sceneImag->zoom();
-        z.setXMin(m_sceneReal->zoom().xMin());
-        z.setXMax(m_sceneReal->zoom().xMax());
+    XYScene *scenes[3] = {m_sceneReal, m_sceneImag, m_sceneRefl};
 
-        m_sceneImag->setZoom(z);
-        m_sceneImag->regraph();
-    }
+    for (int i = 0; i < 3; ++i) {
+        if (sender() == scenes[i]) {
+            for (int j = 0; j < 3; ++j) {
+                if (j != i) {
+                    RealZoom z = scenes[j]->zoom();
+                    z.setXMin(scenes[i]->zoom().xMin());
+                    z.setXMax(scenes[i]->zoom().xMax());
 
-    if (sender() == m_sceneImag) {
-        RealZoom z = m_sceneReal->zoom();
-        z.setXMin(m_sceneImag->zoom().xMin());
-        z.setXMax(m_sceneImag->zoom().xMax());
-
-        m_sceneReal->setZoom(z);
-        m_sceneReal->regraph();
+                    scenes[j]->setZoom(z);
+                    scenes[j]->regraph();
+                }
+            }
+        }
     }
 
     m_sceneReal->setState(m_sceneReal->state() | XYScene::SendZoomChanged);
     m_sceneImag->setState(m_sceneImag->state() | XYScene::SendZoomChanged);
+    m_sceneRefl->setState(m_sceneRefl->state() | XYScene::SendZoomChanged);
 }
 
 
@@ -650,15 +725,28 @@ void MainWindow::xysamexzoom()
 void MainWindow::on_actionLoad_data_triggered()
 {
     synchroCurrentFiles();
-    const QString file = QFileDialog::getOpenFileName(this, tr("Open the data file"), m_currentDataFile);
+    const QString file = QFileDialog::getOpenFileName(this, tr("Open ellipsometry file"), m_currentEllipsometryFile);
     if (file.isEmpty())
         return;
 
-    if (loadData(file)) {
+    if (loadEllipsometryData(file)) {
         QFileInfo fileinfo(file);
-        m_currentDataFile = fileinfo.filePath();
+        m_currentEllipsometryFile = fileinfo.filePath();
         m_currentSaveFile = QFileInfo(fileinfo.path(), fileinfo.baseName().append(".txt")).filePath();
         m_currentPrintFile = QFileInfo(fileinfo.path(), fileinfo.baseName().append(".pdf")).filePath();
+    }
+}
+
+void MainWindow::on_actionLoad_reflexion_file_triggered()
+{
+    synchroCurrentFiles();
+    const QString file = QFileDialog::getOpenFileName(this, tr("Open reflexion file"), m_currentReflexionFile);
+    if (file.isEmpty())
+        return;
+
+    if (loadReflexionData(file)) {
+        QFileInfo fileinfo(file);
+        m_currentReflexionFile = fileinfo.filePath();
     }
 }
 
@@ -763,6 +851,7 @@ void MainWindow::on_action_Print_triggered()
     functionGestion();
     ui->graphicsViewReal->resizeScene();
     ui->graphicsViewImag->resizeScene();
+    ui->graphicsViewRefl->resizeScene();
 
     QMessageBox::information(this, tr("PDF generate"), tr("PDF file successfully generated"));
 }

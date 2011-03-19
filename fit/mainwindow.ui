@@ -61,7 +61,7 @@ p, li { white-space: pre-wrap; }
        </widget>
       </item>
       <item>
-       <widget class="QGraphicsView" name="graphicsView">
+       <widget class="GraphicsView" name="graphicsViewRefl">
         <property name="verticalScrollBarPolicy">
          <enum>Qt::ScrollBarAlwaysOff</enum>
         </property>
@@ -113,6 +113,7 @@ p, li { white-space: pre-wrap; }
      <string>&amp;File</string>
     </property>
     <addaction name="actionLoad_data"/>
+    <addaction name="actionLoad_reflexion_file"/>
     <addaction name="actionOpen_results_file"/>
     <addaction name="action_Save_results"/>
     <addaction name="separator"/>
@@ -152,7 +153,7 @@ p, li { white-space: pre-wrap; }
      <normaloff>:/img/data-icon.png</normaloff>:/img/data-icon.png</iconset>
    </property>
    <property name="text">
-    <string>Load &amp;data file...</string>
+    <string>Load &amp;ellipsometry file...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+O</string>
@@ -203,7 +204,7 @@ p, li { white-space: pre-wrap; }
      <normaloff>:/img/open-icon.png</normaloff>:/img/open-icon.png</iconset>
    </property>
    <property name="text">
-    <string>Open &amp;results file...</string>
+    <string>&amp;Open results file...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -258,6 +259,15 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>&amp;Options...</string>
+   </property>
+  </action>
+  <action name="actionLoad_reflexion_file">
+   <property name="icon">
+    <iconset resource="data.qrc">
+     <normaloff>:/img/data-icon.png</normaloff>:/img/data-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Load &amp;reflexion file...</string>
    </property>
   </action>
  </widget>

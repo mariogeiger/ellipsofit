@@ -31,7 +31,8 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    bool loadData(const QString &file);
+    bool loadEllipsometryData(const QString &file);
+    bool loadReflexionData(const QString &file);
     bool saveResults(const QString &file);
     bool openResults(const QString &file);
 
@@ -58,27 +59,35 @@ private slots:
     void on_action_Fullscreen_triggered(bool checked);
     void on_action_Save_results_triggered();
     void on_actionLoad_data_triggered();
+    void on_actionLoad_reflexion_file_triggered();
 
 private:
     Ui::MainWindow *ui;
     XYScene *m_sceneReal;
     XYScene *m_sceneImag;
+    XYScene *m_sceneRefl;
 
     Paramedit *m_paramedit;
     QDockWidget *m_dockParamedit;
     Optimist *m_optimist;
     QDockWidget *m_dockOptimist;
 
-    QString m_currentDataFile;
+    QString m_currentEllipsometryFile;
+    QString m_currentReflexionFile;
     QString m_currentOpenFile;
     QString m_currentSaveFile;
     QString m_currentPrintFile;
+
     XYScatterplot *m_dataReal;
     XYScatterplot *m_dataImag;
+    XYScatterplot *m_dataRefl;
+
     XYRealFun *m_funcReal;
     XYRealDrud *m_drudReal;
     XYImagFun *m_funcImag;
     XYImagDrud *m_drudImag;
+    XYReflFun *m_funcRefl;
+
     QList<XYRealLaurentian *> m_laurentiansReal;
     QList<XYImagLaurentian *> m_laurentiansImag;
 

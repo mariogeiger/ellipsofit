@@ -1,7 +1,4 @@
 /*
-
-    Copyright (c) 2010 by Mario Geiger <mario.geiger@epfl.ch>
-
  ***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -13,6 +10,7 @@
 */
 
 #include "ellipsomath.h"
+#include <math.h>
 
 
 
@@ -20,7 +18,6 @@
 // MATHEMATIC - REAL
 //==============================================================
 
-#include <math.h>
 qreal mathRealDrud(qreal e, qreal einf, qreal ep, qreal g) {
     return einf - (ep * ep) / (e * e + g * g);
 }
@@ -35,12 +32,12 @@ qreal mathRealLaurentian(qreal e, qreal ek, qreal fk, qreal gk) {
 
 qreal mathRealFun(qreal e, const Parameters &p)
 {
-	qreal som = mathRealDrud(e, p.einf, p.ep, p.g);
-	for (int i = 0; i < p.laurentians.size(); ++i)
-		som += mathRealLaurentian(e, p.laurentians[i].k[LaurEK],
-								  p.laurentians[i].k[LaurFK],
-								  p.laurentians[i].k[LaurGK]);
-	return som;
+    qreal som = mathRealDrud(e, p.einf, p.ep, p.g);
+    for (int i = 0; i < p.laurentians.size(); ++i)
+        som += mathRealLaurentian(e, p.laurentians[i].k[LaurEK],
+                                  p.laurentians[i].k[LaurFK],
+                                  p.laurentians[i].k[LaurGK]);
+    return som;
 }
 
 
@@ -64,12 +61,26 @@ qreal mathImagLaurentian(qreal e, qreal ek, qreal fk, qreal gk) {
 
 qreal mathImagFun(qreal e, const Parameters &p)
 {
-	qreal som = mathImagDrud(e, p.ep, p.g);
-	for (int i = 0; i < p.laurentians.size(); ++i)
-		som += mathImagLaurentian(e, p.laurentians[i].k[LaurEK],
-								  p.laurentians[i].k[LaurFK],
-								  p.laurentians[i].k[LaurGK]);
-	return som;
+    qreal som = mathImagDrud(e, p.ep, p.g);
+    for (int i = 0; i < p.laurentians.size(); ++i)
+        som += mathImagLaurentian(e, p.laurentians[i].k[LaurEK],
+                                  p.laurentians[i].k[LaurFK],
+                                  p.laurentians[i].k[LaurGK]);
+    return som;
+}
+
+
+
+//==============================================================
+// MATHEMATIC - REFLEXION
+//==============================================================
+
+qreal mathReflexion(qreal e, const Parameters &p)
+{
+    const qreal epsilon1 = mathRealFun(e, p);
+    const qreal epsilon2 = mathImagFun(e, p);
+    //! FIXME
+    return epsilon1 / epsilon2;
 }
 
 
@@ -102,43 +113,43 @@ bool XYEllipsoFun::domain(qreal x) const
 //==============================================================
 
 XYRealFun::XYRealFun(const Parameters &parameters, const QPen &pen)
-	: XYEllipsoFun(parameters, pen)
+    : XYEllipsoFun(parameters, pen)
 {
 
 }
 
 qreal XYRealFun::y(qreal x) const
 {
-	return mathRealFun(x, p);
+    return mathRealFun(x, p);
 }
 
 XYRealDrud::XYRealDrud(const Parameters &parameters, const QPen &pen)
-	: XYEllipsoFun(parameters, pen)
+    : XYEllipsoFun(parameters, pen)
 {
 
 }
 
 qreal XYRealDrud::y(qreal x) const
 {
-	return mathRealDrud(x, p.einf, p.ep, p.g);
+    return mathRealDrud(x, p.einf, p.ep, p.g);
 }
 
 XYRealLaurentian::XYRealLaurentian(const Parameters &parameters, const QPen &pen)
-	: XYEllipsoFun(parameters, pen), no(0)
+    : XYEllipsoFun(parameters, pen), no(0)
 {
 
 }
 
 qreal XYRealLaurentian::y(qreal x) const
 {
-	return mathRealLaurentian(x, p.laurentians[no].k[LaurEK],
-							  p.laurentians[no].k[LaurFK],
-							  p.laurentians[no].k[LaurGK]);
+    return mathRealLaurentian(x, p.laurentians[no].k[LaurEK],
+                              p.laurentians[no].k[LaurFK],
+                              p.laurentians[no].k[LaurGK]);
 }
 
 void XYRealLaurentian::setNo(int n)
 {
-	no = n;
+    no = n;
 }
 
 
@@ -147,41 +158,57 @@ void XYRealLaurentian::setNo(int n)
 //==============================================================
 
 XYImagFun::XYImagFun(const Parameters &parameters, const QPen &pen)
-	: XYEllipsoFun(parameters, pen)
+    : XYEllipsoFun(parameters, pen)
 {
 
 }
 
 qreal XYImagFun::y(qreal x) const
 {
-	return mathImagFun(x, p);
+    return mathImagFun(x, p);
 }
 
 XYImagDrud::XYImagDrud(const Parameters &parameters, const QPen &pen)
-	: XYEllipsoFun(parameters, pen)
+    : XYEllipsoFun(parameters, pen)
 {
 
 }
 
 qreal XYImagDrud::y(qreal x) const
 {
-	return mathImagDrud(x, p.ep, p.g);
+    return mathImagDrud(x, p.ep, p.g);
 }
 
 XYImagLaurentian::XYImagLaurentian(const Parameters &parameters, const QPen &pen)
-	: XYEllipsoFun(parameters, pen), no(0)
+    : XYEllipsoFun(parameters, pen), no(0)
 {
 
 }
 
 qreal XYImagLaurentian::y(qreal x) const
 {
-	return mathImagLaurentian(x, p.laurentians[no].k[LaurEK],
-							  p.laurentians[no].k[LaurFK],
-							  p.laurentians[no].k[LaurGK]);
+    return mathImagLaurentian(x, p.laurentians[no].k[LaurEK],
+                              p.laurentians[no].k[LaurFK],
+                              p.laurentians[no].k[LaurGK]);
 }
 
 void XYImagLaurentian::setNo(int n)
 {
-	no = n;
+    no = n;
+}
+
+
+//==============================================================
+// GRAPHIC - REFLEXION
+//==============================================================
+
+XYReflFun::XYReflFun(const Parameters &parameters, const QPen &pen)
+    : XYEllipsoFun(parameters, pen)
+{
+
+}
+
+qreal XYReflFun::y(qreal x) const
+{
+    return mathReflexion(x, p);
 }

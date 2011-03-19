@@ -36,6 +36,12 @@ typedef struct {
 
 extern Parameters parameters;
 
+
+
+//
+// main Class
+//
+
 class XYEllipsoFun : public XYFunction
 {
 public:
@@ -46,6 +52,11 @@ protected:
 	const Parameters &p;
 };
 
+
+
+//
+// Real classes
+//
 
 class XYRealFun : public XYEllipsoFun
 {
@@ -75,20 +86,24 @@ qreal mathRealFun(qreal e, const Parameters &p);
 
 
 
+//
+// Imaginary classes
+//
+
 class XYImagFun : public XYEllipsoFun
 {
 public:
 	XYImagFun(const Parameters &parameters, const QPen &pen = QPen());
 	virtual qreal y(qreal x) const;
-
 };
+
 class XYImagDrud : public XYEllipsoFun
 {
 public:
 	XYImagDrud(const Parameters &parameters, const QPen &pen = QPen());
 	virtual qreal y(qreal x) const;
-
 };
+
 class XYImagLaurentian : public XYEllipsoFun
 {
 public:
@@ -100,5 +115,23 @@ private:
 };
 
 qreal mathImagFun(qreal e, const Parameters &p);
+
+
+
+//
+// Reflexion classes
+//
+
+class XYReflFun : public XYEllipsoFun
+{
+public:
+        XYReflFun(const Parameters &parameters, const QPen &pen = QPen());
+        virtual qreal y(qreal x) const;
+};
+
+qreal mathReflexion(qreal e, const Parameters &p);
+
+
+
 
 #endif // ELLIPSOMATH_H
