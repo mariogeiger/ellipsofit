@@ -153,7 +153,7 @@ MainWindow::MainWindow(QWidget *parent) :
                                     QDockWidget::DockWidgetFloatable |
                                     QDockWidget::DockWidgetClosable);
         m_dockOptimist->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-        m_optimist = new Optimist(m_dataReal, m_dataImag, this);
+        m_optimist = new Optimist(m_dataReal, m_dataImag, m_dataRefl, this);
         m_dockOptimist->setWidget(m_optimist);
 
         char pos = settings.value("optimist_pos", 'r').toInt();
@@ -748,6 +748,12 @@ void MainWindow::on_actionLoad_reflexion_file_triggered()
         QFileInfo fileinfo(file);
         m_currentReflexionFile = fileinfo.filePath();
     }
+}
+
+void MainWindow::on_actionClear_reflexion_data_triggered()
+{
+    m_dataRefl->clear();
+    m_sceneRefl->regraph();
 }
 
 void MainWindow::on_action_Save_results_triggered()

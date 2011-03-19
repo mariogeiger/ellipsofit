@@ -30,10 +30,11 @@ namespace Ui {
 class Optimist : public QWidget {
     Q_OBJECT
 public:
-    Optimist(XYScatterplot *rsp, XYScatterplot *isp, QWidget *parent = 0, Qt::WindowFlags f = 0);
+    Optimist(XYScatterplot *realEpsilonData, XYScatterplot *imaginaryEpsilonData, XYScatterplot *reflexionData, QWidget *parent = 0, Qt::WindowFlags f = 0);
     ~Optimist();
 
-    static qreal coefficientOfDetermination(const QList<QPointF> &real, const QList<QPointF> &imag, const Parameters &para);
+    static qreal coefficientOfDeterminationOfEllipsometry(const QList<QPointF> &real, const QList<QPointF> &imag, const Parameters &para);
+    static qreal coefficientOfDeterminationOfReflexion(const QList<QPointF> &reflexion, const Parameters &para);
 
 signals:
     void parameterFind(Parameters para);
@@ -47,8 +48,10 @@ private:
     void stopThreads();
 
     Ui::Optimist *ui;
-    XYScatterplot *m_rsp;
-    XYScatterplot *m_isp;
+    XYScatterplot *m_realEpsilonData;
+    XYScatterplot *m_imaginaryEpsilonData;
+    XYScatterplot *m_reflexionData;
+
     QList<OptiThread *> threads;
 
     QTimer *m_timer;
@@ -63,7 +66,7 @@ inline qreal random(qreal min, qreal max);
 class OptiThread : public QThread {
     Q_OBJECT
 public:
-    OptiThread(XYScatterplot *rsp, XYScatterplot *isp, const Parameters &pref, const Parameters &pdel, bool qa, QObject * parent = 0);
+    OptiThread(XYScatterplot *realEpsilon, XYScatterplot *imaginaryEpsilon, XYScatterplot *reflexion, const Parameters &pref, const Parameters &pdel, bool qa, bool withReflexion, QObject * parent = 0);
     void stop();
 
     static Parameters getTheBestParameters();
@@ -83,11 +86,14 @@ protected:
 private:
     void makeMinMax(Parameters &pmin, Parameters &pmax);
 
-    QList<QPointF> m_rsp;
-    QList<QPointF> m_isp;
+    QList<QPointF> m_realEpsilon;
+    QList<QPointF> m_imaginaryEpsilon;
+    QList<QPointF> m_reflexion;
+
     Parameters m_pRef;
     Parameters m_pDel;
     bool m_qa;
+    bool m_useReflexion;
 
     bool m_run;
 

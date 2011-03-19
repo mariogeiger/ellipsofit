@@ -113,7 +113,6 @@ p, li { white-space: pre-wrap; }
      <string>&amp;File</string>
     </property>
     <addaction name="actionLoad_data"/>
-    <addaction name="actionLoad_reflexion_file"/>
     <addaction name="actionOpen_results_file"/>
     <addaction name="action_Save_results"/>
     <addaction name="separator"/>
@@ -142,7 +141,15 @@ p, li { white-space: pre-wrap; }
     </property>
     <addaction name="action_Options"/>
    </widget>
+   <widget class="QMenu" name="menuReflexion">
+    <property name="title">
+     <string>&amp;Reflexion</string>
+    </property>
+    <addaction name="actionLoad_reflexion_file"/>
+    <addaction name="actionClear_reflexion_data"/>
+   </widget>
    <addaction name="menu_File"/>
+   <addaction name="menuReflexion"/>
    <addaction name="menu_Window"/>
    <addaction name="menuTools"/>
    <addaction name="menu_Help"/>
@@ -268,6 +275,15 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>Load &amp;reflexion file...</string>
+   </property>
+  </action>
+  <action name="actionClear_reflexion_data">
+   <property name="icon">
+    <iconset resource="data.qrc">
+     <normaloff>:/img/broom-icon.svg</normaloff>:/img/broom-icon.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Clear reflexion data</string>
    </property>
   </action>
  </widget>

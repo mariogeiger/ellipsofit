@@ -11,5 +11,6 @@
         <file>earth-icon.png</file>
         <file>about-icon.png</file>
         <file>gear-icon.png</file>
+        <file>broom-icon.svg</file>
     </qresource>
 </RCC>

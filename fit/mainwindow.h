@@ -43,6 +43,7 @@ private:
     void checkUpdate(bool verbose);
 
 private slots:
+    void on_actionClear_reflexion_data_triggered();
     void on_action_Options_triggered();
     void on_actionAbout_Ellipsofit_triggered();
     void on_actionCheck_update_triggered();

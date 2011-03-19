@@ -19,40 +19,43 @@
 #include <QMutexLocker>
 #include <QSettings>
 
-Optimist::Optimist(XYScatterplot *rsp, XYScatterplot *isp, QWidget *parent, Qt::WindowFlags f) :
-		QWidget(parent, f),
-		ui(new Ui::Optimist)
+Optimist::Optimist(XYScatterplot *realEpsilonData, XYScatterplot *imaginaryEpsilonData, XYScatterplot *reflexionData, QWidget *parent, Qt::WindowFlags f) :
+        QWidget(parent, f),
+        ui(new Ui::Optimist)
 {
     ui->setupUi(this);
 
-    m_rsp = rsp;
-    m_isp = isp;
+    m_realEpsilonData = realEpsilonData;
+    m_imaginaryEpsilonData = imaginaryEpsilonData;
+    m_reflexionData = reflexionData;
 
     m_timer = new QTimer(this);
     connect(m_timer, SIGNAL(timeout()), this, SLOT(refreshStats()));
-	m_timer->setInterval(500);
+    m_timer->setInterval(500);
 
-	QSettings settings;
-	ui->dsbI->setValue(settings.value("optimist_dsbi", 1.0).toReal());
-	ui->dsbP->setValue(settings.value("optimist_dsbp", 1.0).toReal());
-	ui->dsbG->setValue(settings.value("optimist_dsbg", 0.5).toReal());
-	ui->dsbEk->setValue(settings.value("optimist_dsbek", 0.01).toReal());
-	ui->dsbFk->setValue(settings.value("optimist_dsbfk", 0.04).toReal());
-	ui->dsbGk->setValue(settings.value("optimist_dsbgk", 0.04).toReal());
-	ui->qa->setChecked(settings.value("optimist_qa", true).toBool());
+    QSettings settings;
+    ui->dsbI->setValue(settings.value("optimist_dsbi", 1.0).toReal());
+    ui->dsbP->setValue(settings.value("optimist_dsbp", 1.0).toReal());
+    ui->dsbG->setValue(settings.value("optimist_dsbg", 0.5).toReal());
+    ui->dsbEk->setValue(settings.value("optimist_dsbek", 0.01).toReal());
+    ui->dsbFk->setValue(settings.value("optimist_dsbfk", 0.04).toReal());
+    ui->dsbGk->setValue(settings.value("optimist_dsbgk", 0.04).toReal());
+    ui->qa->setChecked(settings.value("optimist_qa", true).toBool());
+    ui->reflexionfit->setChecked(settings.value("optimist_reflexiontofit", false).toBool());
 }
 
 Optimist::~Optimist()
 {
-	QSettings settings;
-	settings.setValue("optimist_dsbi", ui->dsbI->value());
-	settings.setValue("optimist_dsbp", ui->dsbP->value());
-	settings.setValue("optimist_dsbg", ui->dsbG->value());
-	settings.setValue("optimist_dsbek", ui->dsbEk->value());
-	settings.setValue("optimist_dsbfk", ui->dsbFk->value());
-	settings.setValue("optimist_dsbgk", ui->dsbGk->value());
-	settings.setValue("optimist_qa", ui->qa->isChecked());
-	delete ui;
+    QSettings settings;
+    settings.setValue("optimist_dsbi", ui->dsbI->value());
+    settings.setValue("optimist_dsbp", ui->dsbP->value());
+    settings.setValue("optimist_dsbg", ui->dsbG->value());
+    settings.setValue("optimist_dsbek", ui->dsbEk->value());
+    settings.setValue("optimist_dsbfk", ui->dsbFk->value());
+    settings.setValue("optimist_dsbgk", ui->dsbGk->value());
+    settings.setValue("optimist_qa", ui->qa->isChecked());
+    settings.setValue("optimist_reflexiontofit", ui->reflexionfit->isChecked());
+    delete ui;
 }
 
 void Optimist::changeEvent(QEvent *e)
@@ -67,18 +70,21 @@ void Optimist::changeEvent(QEvent *e)
     }
 }
 
-qreal Optimist::coefficientOfDetermination(const QList<QPointF> &real, const QList<QPointF> &imag, const Parameters &para)
+qreal Optimist::coefficientOfDeterminationOfEllipsometry(const QList<QPointF> &real, const QList<QPointF> &imag, const Parameters &para)
 {
     Q_ASSERT(real.size() == imag.size());
 
     qreal n = real.size();
-    qreal moyR = 0.0;
-    qreal moyI = 0.0;
+    qreal avgR = 0.0;
+    qreal avgI = 0.0;
 
-    for (int i = 0; i < real.size(); ++i) {
-		moyR += real[i].y() / n;
-		moyI += imag[i].y() / n;
+    for (int i = real.size() - 1; i >= 0; --i) {
+        avgR += real[i].y();
+        avgI += imag[i].y();
     }
+
+    avgR /= n;
+    avgI /= n;
 
     qreal sstotR = 0.0;
     qreal sserrR = 0.0;
@@ -87,77 +93,107 @@ qreal Optimist::coefficientOfDetermination(const QList<QPointF> &real, const QLi
 
     qreal tmp;
     for (int i = 0; i < real.size(); ++i) {
-		tmp = real[i].y() - moyR;
-		sstotR += tmp * tmp;
+        tmp = real[i].y() - avgR;
+        sstotR += tmp * tmp;
 
-		tmp = real[i].y() - mathRealFun(real[i].x(), para);
-		sserrR += tmp * tmp;
+        tmp = real[i].y() - mathRealFun(real[i].x(), para);
+        sserrR += tmp * tmp;
 
-		tmp = imag[i].y() - moyI;
-		sstotI += tmp * tmp;
+        tmp = imag[i].y() - avgI;
+        sstotI += tmp * tmp;
 
-		tmp = imag[i].y() - mathImagFun(imag[i].x(), para);
-		sserrI += tmp * tmp;
+        tmp = imag[i].y() - mathImagFun(imag[i].x(), para);
+        sserrI += tmp * tmp;
     }
 
     return ((1.0 - sserrR / sstotR) + (1.0 - sserrI / sstotR)) / 2.0;
 }
 
+qreal Optimist::coefficientOfDeterminationOfReflexion(const QList<QPointF> &reflexion, const Parameters &para)
+{
+    qreal n = reflexion.size();
+    qreal average = 0.0;
+
+    for (int i = reflexion.size() - 1; i >= 0; --i) {
+        average += reflexion[i].y();
+    }
+    average /= n;
+
+    qreal sstot = 0.0;
+    qreal sserr = 0.0;
+
+    qreal tmp;
+    for (int i = reflexion.size() - 1; i >= 0; --i) {
+        tmp = reflexion[i].y() - average;
+        sstot += tmp * tmp;
+
+        tmp = reflexion[i].y() - mathReflexion(reflexion[i].x(), para);
+        sserr += tmp * tmp;
+    }
+
+    return 1.0 - sserr / sstot;
+}
+
 void Optimist::on_pushButton_clicked()
 {
-	ui->tab_2->setDisabled(threads.isEmpty());
-	ui->qa->setDisabled(threads.isEmpty());
+    ui->tab_2->setDisabled(threads.isEmpty());
+    ui->qa->setDisabled(threads.isEmpty());
+    ui->reflexionfit->setDisabled(threads.isEmpty());
 
     if (threads.isEmpty()) {
-		ui->pushButton->setText(tr("Stop"));
-		startThreads();
+        ui->pushButton->setText(tr("Stop"));
+        startThreads();
     } else {
-		ui->pushButton->setText(tr("Start !"));
-		stopThreads();
+        ui->pushButton->setText(tr("Start !"));
+        stopThreads();
     }
 }
 
 void Optimist::refreshStats()
 {
-	static quint32 goods;
+    static quint32 goods;
     ui->label_7->setText(tr("R<span style=\" vertical-align:super;\">2</span> = %1  (%L2/%L3)")
-						 .arg(OptiThread::s_bstR2)
-						 .arg(OptiThread::s_goods)
-						 .arg(OptiThread::s_tests));
+                         .arg(OptiThread::s_bstR2)
+                         .arg(OptiThread::s_goods)
+                         .arg(OptiThread::s_tests));
 
-	if (goods != OptiThread::s_goods) {
-		goods = OptiThread::s_goods;
-		parameters = OptiThread::getTheBestParameters();
-		emit parameterFind(parameters);
-	}
+    if (goods != OptiThread::s_goods) {
+        goods = OptiThread::s_goods;
+        parameters = OptiThread::getTheBestParameters();
+        emit parameterFind(parameters);
+    }
 }
 
 void Optimist::startThreads()
 {
-	emit optimizationRun(true);
+    emit optimizationRun(true);
 
-	OptiThread::s_bstR2 = Optimist::coefficientOfDetermination(m_rsp->getPoints(), m_isp->getPoints(), parameters);
+    OptiThread::s_bstR2 = Optimist::coefficientOfDeterminationOfEllipsometry(m_realEpsilonData->getPoints(), m_imaginaryEpsilonData->getPoints(), parameters);
+    if (ui->reflexionfit->isChecked()) {
+        OptiThread::s_bstR2 += Optimist::coefficientOfDeterminationOfReflexion(m_reflexionData->getPoints(), parameters);
+        OptiThread::s_bstR2 /= 2.0;
+    }
 
-	ui->label_8->setText(tr("initial R<span style=\" vertical-align:super;\">2</span> = %1").arg(OptiThread::s_bstR2));
+    ui->label_8->setText(tr("initial R<span style=\" vertical-align:super;\">2</span> = %1").arg(OptiThread::s_bstR2));
 
-	OptiThread::s_bestpar = parameters;
-	Parameters pDel;
-	pDel.laurentians.append(Laurentian());
+    OptiThread::s_bestpar = parameters;
+    Parameters pDel;
+    pDel.laurentians.append(Laurentian());
 
-	pDel.einf = ui->dsbI->value();
-	pDel.ep = ui->dsbP->value();
-	pDel.g = ui->dsbG->value();
-	pDel.laurentians[0].k[LaurEK] = ui->dsbEk->value();
-	pDel.laurentians[0].k[LaurFK] = ui->dsbFk->value();
-	pDel.laurentians[0].k[LaurGK] = ui->dsbGk->value();
+    pDel.einf = ui->dsbI->value();
+    pDel.ep = ui->dsbP->value();
+    pDel.g = ui->dsbG->value();
+    pDel.laurentians[0].k[LaurEK] = ui->dsbEk->value();
+    pDel.laurentians[0].k[LaurFK] = ui->dsbFk->value();
+    pDel.laurentians[0].k[LaurGK] = ui->dsbGk->value();
 
-	OptiThread::s_tests = 0;
-	OptiThread::s_goods = 0;
+    OptiThread::s_tests = 0;
+    OptiThread::s_goods = 0;
     int cpu = ncpu();
     for (int i = 0; i < cpu; ++i) {
-		OptiThread *thr = new OptiThread(m_rsp, m_isp, OptiThread::s_bestpar, pDel, ui->qa->isChecked());
-		thr->start();
-		threads.append(thr);
+        OptiThread *thr = new OptiThread(m_realEpsilonData, m_imaginaryEpsilonData, m_reflexionData, OptiThread::s_bestpar, pDel, ui->qa->isChecked(), ui->reflexionfit->isChecked());
+        thr->start();
+        threads.append(thr);
     }
     m_timer->start();
 }
@@ -166,19 +202,19 @@ void Optimist::stopThreads()
 {
     m_timer->stop();
     for (int i = 0; i < threads.size(); ++i) {
-		threads[i]->stop();
-		threads[i]->wait();
-		delete threads[i];
+        threads[i]->stop();
+        threads[i]->wait();
+        delete threads[i];
     }
 
     threads.clear();
 
     ui->label_7->clear();
-	ui->label_8->setText(tr("final R<span style=\" vertical-align:super;\">2</span> = %1").arg(OptiThread::s_bstR2));
+    ui->label_8->setText(tr("final R<span style=\" vertical-align:super;\">2</span> = %1").arg(OptiThread::s_bstR2));
 
-	parameters = OptiThread::getTheBestParameters();
-	emit parameterFind(parameters);
-	emit optimizationRun(false);
+    parameters = OptiThread::getTheBestParameters();
+    emit parameterFind(parameters);
+    emit optimizationRun(false);
 }
 
 
@@ -189,21 +225,23 @@ quint32 OptiThread::s_goods;
 quint32 OptiThread::s_tests;
 
 
-OptiThread::OptiThread(XYScatterplot *rsp, XYScatterplot *isp, const Parameters &pref, const Parameters &pdel, bool qa, QObject *parent) :
-		QThread(parent)
+OptiThread::OptiThread(XYScatterplot *realEpsilon, XYScatterplot *imaginaryEpsilon, XYScatterplot *reflexion, const Parameters &pref, const Parameters &pdel, bool qa, bool withReflexion, QObject *parent) :
+        QThread(parent)
 {
-    m_rsp = rsp->getPoints();
-    m_isp = isp->getPoints();
+    m_realEpsilon = realEpsilon->getPoints();
+    m_imaginaryEpsilon = imaginaryEpsilon->getPoints();
+    m_reflexion = reflexion->getPoints();
 
-	m_pRef = pref;
-	m_pDel = pdel;
-	m_qa = qa;
+    m_pRef = pref;
+    m_pDel = pdel;
+    m_qa = qa;
+    m_useReflexion = withReflexion;
 }
 
 Parameters OptiThread::getTheBestParameters()
 {
-	QMutexLocker ml(&s_mutex);
-	return s_bestpar;
+    QMutexLocker ml(&s_mutex);
+    return s_bestpar;
 }
 
 void OptiThread::stop()
@@ -213,83 +251,87 @@ void OptiThread::stop()
 
 void OptiThread::makeMinMax(Parameters &pmin, Parameters &pmax)
 {
-	pmin = pmax = m_pRef;
+    pmin = pmax = m_pRef;
 
-	pmin.einf = m_pRef.einf - m_pDel.einf;
-	pmax.einf = m_pRef.einf + m_pDel.einf;
+    pmin.einf = m_pRef.einf - m_pDel.einf;
+    pmax.einf = m_pRef.einf + m_pDel.einf;
 
-	pmin.ep = m_pRef.ep - m_pDel.ep;
-	pmax.ep = m_pRef.ep + m_pDel.ep;
+    pmin.ep = m_pRef.ep - m_pDel.ep;
+    pmax.ep = m_pRef.ep + m_pDel.ep;
 
-	pmin.g = m_pRef.g - m_pDel.g;
-	pmax.g = m_pRef.g + m_pDel.g;
+    pmin.g = m_pRef.g - m_pDel.g;
+    pmax.g = m_pRef.g + m_pDel.g;
 
-	for (int i = 0; i < m_pRef.laurentians.size(); ++i) {
-		for (int k = 0; k < 3; ++k) {
-			pmin.laurentians[i].k[k] = m_pRef.laurentians.at(i).k[k] - m_pDel.laurentians.at(0).k[k];
-			pmax.laurentians[i].k[k] = m_pRef.laurentians.at(i).k[k] + m_pDel.laurentians.at(0).k[k];
-		}
-	}
+    for (int i = 0; i < m_pRef.laurentians.size(); ++i) {
+        for (int k = 0; k < 3; ++k) {
+            pmin.laurentians[i].k[k] = m_pRef.laurentians.at(i).k[k] - m_pDel.laurentians.at(0).k[k];
+            pmax.laurentians[i].k[k] = m_pRef.laurentians.at(i).k[k] + m_pDel.laurentians.at(0).k[k];
+        }
+    }
 }
 
 void OptiThread::run()
 {
-	Parameters pCur, pMin, pMax;
+    Parameters pCur, pMin, pMax;
 
-	pCur = m_pRef;
-	makeMinMax(pMin, pMax);
+    pCur = m_pRef;
+    makeMinMax(pMin, pMax);
 
-	quint32 goods = 0;
+    quint32 goods = 0;
 
     m_run = true;
 
     while (m_run) {
-		pCur.einf = random(pMin.einf, pMax.einf);
-		pCur.ep = random(pMin.ep, pMax.ep);
-		pCur.g = random(pMin.g, pMax.g);
-		for (int i = 0; i < m_pRef.laurentians.size(); ++i) {
-			for (int k = 0; k < 3; ++k)
-				pCur.laurentians[i].k[k] = random(pMin.laurentians[i].k[k], pMax.laurentians[i].k[k]);
-		}
+        pCur.einf = random(pMin.einf, pMax.einf);
+        pCur.ep = random(pMin.ep, pMax.ep);
+        pCur.g = random(pMin.g, pMax.g);
+        for (int i = 0; i < m_pRef.laurentians.size(); ++i) {
+            for (int k = 0; k < 3; ++k)
+                pCur.laurentians[i].k[k] = random(pMin.laurentians[i].k[k], pMax.laurentians[i].k[k]);
+        }
 
-		qreal r2 = Optimist::coefficientOfDetermination(m_rsp, m_isp, pCur);
+        qreal r2 = Optimist::coefficientOfDeterminationOfEllipsometry(m_realEpsilon, m_imaginaryEpsilon, pCur);
+        if (m_useReflexion) {
+            r2 += Optimist::coefficientOfDeterminationOfReflexion(m_reflexion, pCur);
+            r2 /= 2.0;
+        }
 
-		if (r2 > s_bstR2) {
-			s_mutex.lock();
-			++s_goods;
+        if (r2 > s_bstR2) {
+            s_mutex.lock();
+            ++s_goods;
 
-			s_bstR2 = r2;
-			s_bestpar = pCur;
-			emit optfind();
+            s_bstR2 = r2;
+            s_bestpar = pCur;
+            emit optfind();
 
-			s_mutex.unlock();
-		}
+            s_mutex.unlock();
+        }
 
-		if (m_qa && goods != s_goods) {
-			goods = s_goods;
+        if (m_qa && goods != s_goods) {
+            goods = s_goods;
 
-			s_mutex.lock();
-			m_pRef = s_bestpar;
-			s_mutex.unlock();
+            s_mutex.lock();
+            m_pRef = s_bestpar;
+            s_mutex.unlock();
 
-			makeMinMax(pMin, pMax);
-		}
+            makeMinMax(pMin, pMax);
+        }
 
-		++s_tests;
+        ++s_tests;
     }
 }
 
 
 inline qreal random(qreal min, qreal max)
 {
-	if (max < 0.0)
-		return 0.0;
-	qreal result;
-	do {
-		qreal r = (qreal)qrand() / (qreal)RAND_MAX;
-		qreal r2 = r * r;
-		r = 4.0 * r2 * r - 6.0 * r2 + 3.0 * r;
-		result = r * (max - min) + min;
-	} while (result < 0.0);
-	return result;
+    if (max < 0.0)
+        return 0.0;
+    qreal result;
+    do {
+        qreal r = (qreal)qrand() / (qreal)RAND_MAX;
+        qreal r2 = r * r;
+        r = 4.0 * r2 * r - 6.0 * r2 + 3.0 * r;
+        result = r * (max - min) + min;
+    } while (result < 0.0);
+    return result;
 }
