@@ -125,8 +125,10 @@ MainWindow::MainWindow(QWidget *parent) :
         m_dockParamedit->setFeatures(QDockWidget::DockWidgetMovable |
                                      QDockWidget::DockWidgetFloatable);
         m_dockParamedit->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+
         m_paramedit = new Paramedit(this);
         m_dockParamedit->setWidget(m_paramedit);
+//        ui->layoutfordocks->addWidget(m_paramedit);
 
         char pos = settings.value("paramedit_pos", 'l').toInt();
         switch (pos) {
@@ -153,8 +155,10 @@ MainWindow::MainWindow(QWidget *parent) :
                                     QDockWidget::DockWidgetFloatable |
                                     QDockWidget::DockWidgetClosable);
         m_dockOptimist->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+
         m_optimist = new Optimist(m_dataReal, m_dataImag, m_dataRefl, this);
         m_dockOptimist->setWidget(m_optimist);
+//        ui->layoutfordocks->addWidget(m_optimist);
 
         char pos = settings.value("optimist_pos", 'r').toInt();
         switch (pos) {
@@ -565,12 +569,16 @@ void MainWindow::synchroCurrentFiles()
 {
     QString currentDir = QDir::homePath();
     QFileInfo dataFile(m_currentEllipsometryFile);
+    QFileInfo reflFile(m_currentReflectivityFile);
     QFileInfo openFile(m_currentOpenFile);
     QFileInfo saveFile(m_currentSaveFile);
     QFileInfo printFile(m_currentPrintFile);
 
     if (dataFile.isFile()) {
         currentDir = dataFile.path();
+    }
+    if (reflFile.isFile()) {
+        currentDir = reflFile.path();
     }
     if (openFile.isFile()) {
         currentDir = openFile.path();
@@ -584,6 +592,9 @@ void MainWindow::synchroCurrentFiles()
 
     if (!dataFile.isFile()) {
         m_currentEllipsometryFile = currentDir;
+    }
+    if (!reflFile.isFile()) {
+        m_currentReflectivityFile = currentDir;
     }
     if (!openFile.isFile()) {
         m_currentOpenFile = currentDir;

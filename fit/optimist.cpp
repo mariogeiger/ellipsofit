@@ -169,7 +169,7 @@ void Optimist::startThreads()
     emit optimizationRun(true);
 
     OptiThread::s_bstR2 = Optimist::coefficientOfDeterminationOfEllipsometry(m_realEpsilonData->getPoints(), m_imaginaryEpsilonData->getPoints(), parameters);
-    if (ui->reflectivityfit->isChecked()) {
+    if (ui->reflectivityfit->isChecked() && !m_reflectivityData->isEmpty()) {
         OptiThread::s_bstR2 += Optimist::coefficientOfDeterminationOfReflectivity(m_reflectivityData->getPoints(), parameters);
         OptiThread::s_bstR2 /= 2.0;
     }
@@ -235,7 +235,7 @@ OptiThread::OptiThread(XYScatterplot *realEpsilon, XYScatterplot *imaginaryEpsil
     m_pRef = pref;
     m_pDel = pdel;
     m_qa = qa;
-    m_useReflexion = withReflectivity;
+    m_useReflexion = withReflectivity && !m_reflectivity.isEmpty();
 }
 
 Parameters OptiThread::getTheBestParameters()
