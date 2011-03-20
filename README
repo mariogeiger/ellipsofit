@@ -1,0 +1,10 @@
+# memo pour créé un .deb
+renomer le dossier des sources en : ellipsofit-v.v.vv
+compresser le dossier en :          ellipsofit_v.v.vv.orig.tar.gz
+
+les packets requis pour créé le .deb : debhelper cdbs lintian build-essential fakeroot devscripts pbuilder dh-make debootstrap
+
+lancer le script build-pkg.sh avec comme argument "amd64 i386"
+donner le nom de la version : v.v.vv
+
+si aucune clé n'est à jour lancez : gpg --gen-key
