@@ -30,13 +30,24 @@ for arch in $*
 do
 
 	clear
-	echo "=== BEGIN $arch ==="
+	echo "=== BEGIN $arch pbuilder --clean ==="
 	
-	sudo pbuilder --clean || exit 0
+	sudo ARCH=$arch pbuilder --clean || exit 0
+
+	clear
+	echo "=== BEGIN $arch pbuilder update ==="
 	
-	sudo ARCH=$arch pbuilder --create --architecture $arch || exit 0
+	sudo ARCH=$arch pbuilder update --debbuildopts "-I -i -j5 " || exit 0
+
+	clear
+	echo "=== BEGIN $arch pbuilder --create ==="
 	
-	sudo ARCH=$arch pbuilder --build --architecture $arch --buildresult . ellipsofit_${version}-1.dsc || exit 0
+	sudo ARCH=$arch DEB_BUILD_OPTIONS="parallel=5" pbuilder --create --architecture $arch --debbuildopts "-I -i -j5 " || exit 0
+
+	clear
+	echo "=== BEGIN $arch pbuilder --build ==="
+	
+	sudo ARCH=$arch DEB_BUILD_OPTIONS="parallel=5" pbuilder --build --architecture $arch --debbuildopts "-I -i -j5 " --buildresult . ellipsofit_${version}-1.dsc || exit 0
 
 done
 
