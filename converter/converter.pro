@@ -11,10 +11,6 @@ TEMPLATE = app
 
 SOURCES += main.cpp
 
-OBJECTS_DIR = ./build/obj
-MOC_DIR = ./build/moc
-UI_DIR = ./build/ui
-RCC_DIR = ./build/rcc
 
 win32 {
 RC_FILE = file.rc
@@ -24,9 +20,8 @@ RC_FILE = file.rc
 
 win32 {
 target.path = ../binary
-sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS $$RC_FILE converter.pro
-sources.path = ../binary/sources/converter
-INSTALLS += target sources
+
+INSTALLS += target
 }
 
 unix {

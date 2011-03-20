@@ -7,7 +7,7 @@
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{1F5D2996-F52A-4CAD-9156-4A0F51A1208B}
 AppName=EllipsoFit
-AppVerName=EllipsoFit 0.5.03
+AppVerName=EllipsoFit 0.5.99
 AppPublisher=Mario Geiger
 DefaultDirName={pf}\EllipsoFit
 DefaultGroupName=EllipsoFit
@@ -26,11 +26,6 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "dll\*"; DestDir: "{app}"; Flags: ignoreversion
 Source: "binary\*"; DestDir: "{app}"; Flags : ignoreversion
-
-Source: "setup.iss"; DestDir: "{app}\sources"; Flags: ignoreversion
-Source: "binary\sources\*"; DestDir: "{app}\sources"; Flags: ignoreversion
-Source: "binary\sources\converter\*"; DestDir: "{app}\sources\converter"; Flags: ignoreversion
-Source: "binary\sources\fit\*"; DestDir: "{app}\sources\fit"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\EllipsoFit"; Filename: "{app}\EllipsoFit.exe"

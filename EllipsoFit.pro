@@ -1,18 +1,11 @@
 TEMPLATE      = subdirs
 
 SUBDIRS       = fit \
-				converter
+                converter
 
-unix {
-OTHER_FILES   = configure \
-                COPYING \
-                gpl-3.0.txt \
-                tarball.sh \
-                unix/ellipsofit.desktop \
-                unix/rainbow.xpm \
-                addsource.sh \
-                wintarball.sh
-}
+
+
+
 
 
 
@@ -22,13 +15,10 @@ OTHER_FILES   = configure \
 win32 {
 target.path = binary
 
-sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS EllipsoFit.pro COPYING gpl-3.0.txt rainbow.ico
-sources.path = binary/sources
-
 dll.files = $$[QMAKE_LIBDIR_QT]/QtGui4.dll $$[QMAKE_LIBDIR_QT]/QtCore4.dll $$[QMAKE_LIBDIR_QT]/mingwm10.dll $$[QMAKE_LIBDIR_QT]/libgcc_s_dw2-1.dll
 dll.path = dll
 
-INSTALLS += target sources dll
+INSTALLS += target dll
 }
 
 unix {
