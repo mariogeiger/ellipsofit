@@ -5,6 +5,7 @@ QT += network
 
 win32::TARGET = EllipsoFit
 unix::TARGET = ellipsofit-fit
+macx::TARGET = Ellipsofit
 
 TEMPLATE = app
 
@@ -39,6 +40,7 @@ FORMS += mainwindow.ui \
 RESOURCES += data.qrc
 
 win32:RC_FILE = file.rc
+macx:ICON = rainbow.icns
 
 # install
 win32 { 
