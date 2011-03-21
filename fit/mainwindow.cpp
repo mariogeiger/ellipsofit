@@ -45,6 +45,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion());
+
     QSettings settings;
     m_currentEllipsometryFile = settings.value("currentEllipsometryFile").toString();
     m_currentReflectivityFile = settings.value("currentReflectivityFile").toString();
@@ -307,17 +309,17 @@ bool MainWindow::loadEllipsometryData(const QString &file)
         QPointF imag;
         bool ok;
 
-        QStringList split = in.readLine().split(QRegExp("[\\s;,:]"));
+        QStringList split = in.readLine().trimmed().split(QRegExp("[\\s;,:]"));
 
         if (split.size() < 3) {
-            warnings.append(tr("at line %1 : line too short<br />\n").arg(line));
+            warnings.append(tr("line %1 : line too short<br />\n").arg(line));
             continue;
         }
 
         real.setX(split[0].toDouble(&ok));
         imag.setX(real.x());
         if (!ok) {
-            warnings.append(tr("at line %1 : cannot read the first column<br />\n").arg(line));
+            warnings.append(tr("line %1 : cannot read the first column<br />\n").arg(line));
             continue;
         }
 
@@ -327,7 +329,7 @@ bool MainWindow::loadEllipsometryData(const QString &file)
             real.setY(split[1].toDouble(&ok));
         }
         if (!ok) {
-            warnings.append(tr("at line %1 : cannot read the second column<br />\n").arg(line));
+            warnings.append(tr("line %1 : cannot read the second column<br />\n").arg(line));
             continue;
         }
 
@@ -337,7 +339,7 @@ bool MainWindow::loadEllipsometryData(const QString &file)
             imag.setY(split[2].toDouble(&ok));
         }
         if (!ok) {
-            warnings.append(tr("at line %1 : cannot read the third column<br />\n").arg(line));
+            warnings.append(tr("line %1 : cannot read the third column<br />\n").arg(line));
             continue;
         }
 
@@ -347,13 +349,16 @@ bool MainWindow::loadEllipsometryData(const QString &file)
     }
 
     if (!warnings.isEmpty()) {
-        QMessageBox::warning(this, tr("Read error"), tr("<em>%1</em><br />\n%2 points correctly read except :<br />\n%3").arg(file).arg(goodline).arg(warnings.left(1000)));
+        QMessageBox::warning(this, tr("Warnings"), tr("<em>%1</em><br />"
+                                                        "<strong>Warnings :</strong><br />"
+                                                        "%2<br /><strong>%3 accepted lines.</strong>").arg(file).arg(warnings.left(1000)).arg(goodline));
     }
 
     m_sceneReal->regraph();
     m_sceneImag->regraph();
 
-    setWindowTitle(tr("EllipsoFit : %1").arg(file));
+    ui->labelfilereal->setText(file);
+    ui->labelfileimaginary->setText(file);
 
     return true;
 }
@@ -375,22 +380,22 @@ bool MainWindow::loadReflectivityData(const QString &file)
         QPointF reflectivity;
         bool ok;
 
-        QStringList split = in.readLine().split(QRegExp("[\\s;,:]"));
+        QStringList split = in.readLine().trimmed().split(QRegExp("[\\s;,:]"));
 
         if (split.size() < 2) {
-            warnings.append(tr("at line %1 : line too short<br />\n").arg(line));
+            warnings.append(tr("line %1 : line too short<br />\n").arg(line));
             continue;
         }
 
         reflectivity.setX(split[0].toDouble(&ok));
         if (!ok) {
-            warnings.append(tr("at line %1 : cannot read the first column<br />\n").arg(line));
+            warnings.append(tr("line %1 : cannot read the first column<br />\n").arg(line));
             continue;
         }
 
         reflectivity.setY(split[1].toDouble(&ok));
         if (!ok) {
-            warnings.append(tr("at line %1 : cannot read the second column<br />\n").arg(line));
+            warnings.append(tr("line %1 : cannot read the second column<br />\n").arg(line));
             continue;
         }
 
@@ -399,10 +404,14 @@ bool MainWindow::loadReflectivityData(const QString &file)
     }
 
     if (!warnings.isEmpty()) {
-        QMessageBox::warning(this, tr("Read errors"), tr("<em>%1</em><br />\n%2 points correctly read except :<br />\n%3").arg(file).arg(goodline).arg(warnings.left(1000)));
+        QMessageBox::warning(this, tr("Warnings"), tr("<em>%1</em><br />"
+                                                        "<strong>Warnings :</strong><br />"
+                                                        "%2<br /><strong>%3 accepted lines.</strong>").arg(file).arg(warnings.left(1000)).arg(goodline));
     }
 
     m_sceneRefl->regraph();
+
+    ui->labelfilereflectivity->setText(file);
 
     return true;
 }
@@ -430,7 +439,7 @@ bool MainWindow::saveResults(const QString &file)
         out << "Ellipsometry file =\t" << m_currentEllipsometryFile << endl;
 
     if (QFileInfo(m_currentReflectivityFile).isFile())
-        out << "Reflectivity file = \t" << m_currentReflectivityFile << endl;
+        out << "Reflectivity file =\t" << m_currentReflectivityFile << endl;
 
     out << "Einf =\t" << QString::number(parameters.einf, 'g', 5) << endl;
     out << "Ep   =\t" << QString::number(parameters.ep, 'g', 5) << endl;
@@ -461,6 +470,9 @@ bool MainWindow::saveResults(const QString &file)
                 QString::number(yrefl, 'e', 5) << endl;
     }
     QMessageBox::information(this, tr("Well save"), tr("Parameters and functions saved !"));
+
+    setWindowTitle(qApp->applicationName() + " " + file);
+
     return true;
 }
 
@@ -485,7 +497,8 @@ bool MainWindow::openResults(const QString &file)
         laurArg = -1;
         QString line = in.readLine().simplified();
 
-        if (line.startsWith("Ellipsometry file ")) {
+        // Data file was the notation v < 0.6.00
+        if (line.startsWith("Ellipsometry file ") || line.startsWith("Data file")) {
             ellipsometryfile = line.section("=", 1).trimmed();
             QFileInfo fi(ellipsometryfile);
             if (!fi.exists()) {
@@ -561,6 +574,8 @@ bool MainWindow::openResults(const QString &file)
     if (!reflectivityfile.isEmpty())
         if (loadReflectivityData(reflectivityfile))
             m_currentReflectivityFile = reflectivityfile;
+
+    setWindowTitle(qApp->applicationName() + " " + file);
 
     return true;
 }
@@ -787,6 +802,7 @@ void MainWindow::on_actionClear_reflectivity_data_triggered()
 {
     m_dataRefl->clear();
     m_sceneRefl->regraph();
+    ui->labelfilereflectivity->clear();
     m_currentReflectivityFile.clear();
 }
 
