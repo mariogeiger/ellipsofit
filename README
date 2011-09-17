@@ -1,3 +1,13 @@
+Compiler un projet Qt:
+qmake ellipsofit.pro
+make
+
+Installer Ellipsofit:
+make install
+
+
+
+
 # memo pour créé un .deb
 renomer le dossier des sources en : ellipsofit-v.v.vv
 compresser le dossier en :          ellipsofit_v.v.vv.orig.tar.gz

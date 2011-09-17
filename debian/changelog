@@ -1,5 +1,5 @@
-ellipsofit (0.5.99-1) unstable; urgency=low
+ellipsofit (0.6.00-1) unstable; urgency=low
 
-  add reflecivity (beta version)
+  add reflecivity
 
- -- Mario <geiger.mario@gmail.ch>  Sun, 20 Mar 2011 10:32:53 +0100
+ -- Mario <geiger.mario@gmail.ch>  Sat, 17 Sep 2011 12:00:00 +0100

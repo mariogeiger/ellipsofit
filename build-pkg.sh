@@ -3,7 +3,7 @@
 echo -n "version string : "
 read version
 
-cd ellipsofit-$version || exit 0
+#cd ellipsofit-$version || exit 0
 
 
 gpg --list-keys
