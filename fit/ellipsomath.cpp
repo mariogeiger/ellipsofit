@@ -75,12 +75,18 @@ qreal mathImagFun(qreal e, const Parameters &p)
 // MATHEMATIC - Reflectivity
 //==============================================================
 
+#include "thinfilm.h"
+
 qreal mathReflectivity(qreal e, const Parameters &p)
 {
     const qreal epsilon1 = mathRealFun(e, p);
     const qreal epsilon2 = mathImagFun(e, p);
-    //! FIXME
-    return epsilon1 / epsilon2;
+
+    std::vector<blitz::TinyVector<double, 3> > layers;
+    qreal ref;
+    thinfilm::simulate(1.0, 1240.0 / e, 45.0, 1.0, std::complex<double>(epsilon1, epsilon2), layers, &ref);
+
+    return ref;
 }
 
 

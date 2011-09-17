@@ -29,7 +29,8 @@ HEADERS += mainwindow.h \
     optimist.h \
     aboutellipsofit.h \
     optiondialog.h \
-    mplatfnt.h
+    mplatfnt.h \
+    thinfilm.h
 
 FORMS += mainwindow.ui \
     paramedit.ui \
@@ -52,3 +53,4 @@ unix {
     target.path = /usr/bin
     INSTALLS += target
 }
+
