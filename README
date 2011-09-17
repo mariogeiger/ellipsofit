@@ -1,8 +1,12 @@
-Compiler un projet Qt:
+#Dependances
+qt
+libblitz-dev
+
+#Compiler un projet Qt:
 qmake ellipsofit.pro
 make
 
-Installer Ellipsofit:
+#Installer Ellipsofit:
 make install
 
 
