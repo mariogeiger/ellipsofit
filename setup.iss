@@ -7,7 +7,7 @@
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{1F5D2996-F52A-4CAD-9156-4A0F51A1208B}
 AppName=EllipsoFit
-AppVerName=EllipsoFit 0.5.99
+AppVerName=EllipsoFit 0.6.00
 AppPublisher=Mario Geiger
 DefaultDirName={pf}\EllipsoFit
 DefaultGroupName=EllipsoFit
