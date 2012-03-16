@@ -7,6 +7,7 @@ win32::TARGET = EllipsoFit
 unix::TARGET = ellipsofit-fit
 macx::TARGET = Ellipsofit
 
+CONFIG += app_bundle
 TEMPLATE = app
 
 SOURCES += main.cpp \
