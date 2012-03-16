@@ -35,13 +35,12 @@
 #include <QSettings>
 #include <QStatusBar>
 #include <QTextStream>
+#include <QTime>
 #include <QUrl>
 
-#include <time.h>
-
 MainWindow::MainWindow(QWidget *parent) :
-        QMainWindow(parent),
-        ui(new Ui::MainWindow)
+    QMainWindow(parent),
+    ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
@@ -130,7 +129,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
         m_paramedit = new Paramedit(this);
         m_dockParamedit->setWidget(m_paramedit);
-//        ui->layoutfordocks->addWidget(m_paramedit);
+        //        ui->layoutfordocks->addWidget(m_paramedit);
 
         char pos = settings.value("paramedit_pos", 'l').toInt();
         switch (pos) {
@@ -160,7 +159,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
         m_optimist = new Optimist(m_dataReal, m_dataImag, m_dataRefl, this);
         m_dockOptimist->setWidget(m_optimist);
-//        ui->layoutfordocks->addWidget(m_optimist);
+        //        ui->layoutfordocks->addWidget(m_optimist);
 
         char pos = settings.value("optimist_pos", 'r').toInt();
         switch (pos) {
@@ -179,8 +178,9 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     m_http = 0;
-    uint lastCheck = settings.value("last_check_update", 0).toUInt();
-    if (time(0) - lastCheck > 12 * 3600)
+    QTime lastCheck = settings.value("last_check_update", 0).toTime();
+    qDebug() << lastCheck.secsTo(QTime::currentTime());
+    if (lastCheck.secsTo(QTime::currentTime()) > 12 * 3600)
         checkUpdate(false);
 
 
@@ -249,12 +249,15 @@ void MainWindow::checkUpdate(bool verbose)
     else
         connect(m_http, SIGNAL(requestFinished(int,bool)), this, SLOT(httpRequestFinishedSilent(int,bool)));
 
+    QString str = QString::fromUtf8("http://setup.weeb.ch/update/ellipsofit.php?version=%1").arg(
+                qApp->applicationVersion().remove('.').toInt());
+
 
     QBuffer *buffer = new QBuffer(&m_bufferData, m_http);
-    if (buffer->open(QIODevice::ReadWrite))
-        m_httpGetId = m_http->get(QString("http://setup.weeb.ch/update/ellipsofit.php%3Fversion=") +
-                                  QString::number(qApp->applicationVersion().remove('.').toInt()), buffer);
-
+    if (buffer->open(QIODevice::ReadWrite)) {
+        m_httpGetId = m_http->get(str, buffer);
+        qDebug() << str;
+    }
 }
 
 bool MainWindow::httpRequestFinishedSilent(int requestId, bool error)
@@ -268,7 +271,8 @@ bool MainWindow::httpRequestFinishedSilent(int requestId, bool error)
                 QDesktopServices::openUrl(QUrl(QString("http://setup.weeb.ch/update/ellipsofit.php")));
                 qApp->quit();
             }
-            QSettings().setValue("last_check_update", (uint)time(0));
+            qDebug() << "set new time";
+            QSettings().setValue("last_check_update", QTime::currentTime());
         }
         m_http->deleteLater(); m_http = 0;
     }
@@ -349,8 +353,8 @@ bool MainWindow::loadEllipsometryData(const QString &file)
 
     if (!warnings.isEmpty()) {
         QMessageBox::warning(this, tr("Warnings"), tr("<em>%1</em><br />"
-                                                        "<strong>Warnings :</strong><br />"
-                                                        "%2<br /><strong>%3 accepted lines.</strong>").arg(file).arg(warnings.left(1000)).arg(goodline));
+                                                      "<strong>Warnings :</strong><br />"
+                                                      "%2<br /><strong>%3 accepted lines.</strong>").arg(file).arg(warnings.left(1000)).arg(goodline));
     }
 
     m_sceneReal->regraph();
@@ -404,8 +408,8 @@ bool MainWindow::loadReflectivityData(const QString &file)
 
     if (!warnings.isEmpty()) {
         QMessageBox::warning(this, tr("Warnings"), tr("<em>%1</em><br />"
-                                                        "<strong>Warnings :</strong><br />"
-                                                        "%2<br /><strong>%3 accepted lines.</strong>").arg(file).arg(warnings.left(1000)).arg(goodline));
+                                                      "<strong>Warnings :</strong><br />"
+                                                      "%2<br /><strong>%3 accepted lines.</strong>").arg(file).arg(warnings.left(1000)).arg(goodline));
     }
 
     m_sceneRefl->regraph();
@@ -431,7 +435,7 @@ bool MainWindow::saveResults(const QString &file)
 
     out << "# ----------------------------------------------" << endl;
     out << QString("# File created by ellipsoFit %1")
-            .arg(QDateTime::currentDateTime().toString("yyyy-MM-ddThh:mm:ss")) << endl;
+           .arg(QDateTime::currentDateTime().toString("yyyy-MM-ddThh:mm:ss")) << endl;
     out << "# ----------------------------------------------" << endl;
 
     if (QFileInfo(m_currentEllipsometryFile).isFile())
@@ -464,9 +468,9 @@ bool MainWindow::saveResults(const QString &file)
         const qreal yi = m_funcImag->y(x);
         const qreal yrefl = m_funcRefl->y(x);
         out << QString::number(x, 'e', 5) << '\t' <<
-                QString::number(yr, 'e', 5) << '\t' <<
-                QString::number(yi, 'e', 5) << '\t' <<
-                QString::number(yrefl, 'e', 5) << endl;
+               QString::number(yr, 'e', 5) << '\t' <<
+               QString::number(yi, 'e', 5) << '\t' <<
+               QString::number(yrefl, 'e', 5) << endl;
     }
     QMessageBox::information(this, tr("Well save"), tr("Parameters and functions saved !"));
 
@@ -884,7 +888,7 @@ void MainWindow::on_action_Print_triggered()
     y+= imagRect.height() + 40;
 
     QString text = QString("Einf = %1\nEp = %2\nG = %3\n")
-                   .arg(parameters.einf, 0, 'g', 5).arg(parameters.ep, 0, 'g', 5).arg(parameters.g, 0, 'g', 5);
+            .arg(parameters.einf, 0, 'g', 5).arg(parameters.ep, 0, 'g', 5).arg(parameters.g, 0, 'g', 5);
 
     for (int i = 0; i < parameters.laurentians.size(); ++i) {
         text += QString("Ek(%1) = %2, ").arg(i+1)
@@ -952,9 +956,9 @@ void MainWindow::on_action_Options_triggered()
 
         for (int st = 0; st < 2; ++st)
             for (int i = 0; i < 7; ++i) {
-            m_colors[st][i] = d.color(st, i);
-            set.setValue("xycolorstyle_" + QString::number(st) + QString::number(i), m_colors[st][i]);
-        }
+                m_colors[st][i] = d.color(st, i);
+                set.setValue("xycolorstyle_" + QString::number(st) + QString::number(i), m_colors[st][i]);
+            }
         setGraphicStyle();
         functionGestion();
     }
