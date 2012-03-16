@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     a.setApplicationName("EllipsoFit-Fit");
     a.setApplicationVersion("0.6.00");
 
-    qsrand(time(0));
+    qsrand(a.applicationPid());
 
     MainWindow w;
     w.show();
