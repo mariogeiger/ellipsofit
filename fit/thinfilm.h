@@ -2,7 +2,7 @@
 /**
    File: thinfilm.h
 
-   Status:         Version 1.0 Release 2
+   Status:   Version 1.0 Release 3
    Language: C++
 
    License: GNU Public License
@@ -27,25 +27,22 @@
                 not verified.
 
    Function: 1) asin and acos for complex numbers (source Wikipedia)
-             2) simulate a multlayer coating (source Iris Marck)
+             2) simulate a multlayer coating (source Iris Mack)
 
    Thread Safe: Yes
 
-   Package Dependencies: libblitz0-dev
 
    Change History:
    Date         Author        Description
    27.06.2011   Mario Geiger  Initial release
+   31.03.2012   Mario Geiger  Release 3, performance Matrix22
 */
 // ----------------------------------------------------------------------------
 
 #ifndef THINFILM_H
 #define THINFILM_H
 
-#include <blitz/blitz.h>    // Blitz++ is a C++ class library
-//      for scientific computing.
-#include <blitz/tinymat.h>  // for TinyMatrix
-#include <blitz/tinyvec.h>  // for TinyVector
+#include <complex>          // for complex numbers
 #include <cstdio>           // for printf
 #include <vector>           // for a vector of layers
 
@@ -85,60 +82,105 @@ inline complex acos(const complex &z)
         v   /
 
         Incident medium
-            n - ik
+            n - i*k
  -------------------------------
         Layer 0 medium
-         ( d0 n0 k0 )
+         d0 (n0 - i*k0)
  -------------------------------
              ...
 
  -------------------------------
         Layer i medium
-         ( di ni ki )
+         d0 (ni - i*ki)
  -------------------------------
              ...
 
  -------------------------------
+        Layer n medium
+         d0 (n0 - i*k0)
+ -------------------------------
          Exit medium
-            n - ik
+            n - i*k
                     \
                      \
                       \
-                       v  Transmitance
+                       v  Transmittance
 
-<<<<<<< HEAD
-  **/
+**/
+// ----------------------------------------------------------------------------
 
 
+struct Layer {
+    // use the same unit of wavelength
+    double thickness;
 
-// complex index of refraxion nIncident and nExit are
-//                        given in the form of n - ik
+    // with k negative
+    // example (1.5, -0.001)
+    complex refractiveIndex;
+};
 
+/*
+  Simple class for matrix 2x2 to replace blitz++ library
+    - good improvement on mac
+    - very small improvement on linux
+ */
+class Matrix22 {
+public:
+    Matrix22() {}
+    Matrix22(complex m11, complex m12, complex m21, complex m22) :
+        m11(m11), m12(m12), m21(m21), m22(m22)
+    {
+    }
+
+    // matrix 2x2 product
+    Matrix22 operator *(const Matrix22 &b) const {
+        return Matrix22(m11 * b.m11 + m12 * b.m21,
+                        m11 * b.m12 + m12 * b.m22,
+                        m21 * b.m11 + m22 * b.m21,
+                        m21 * b.m12 + m22 * b.m22);
+    }
+
+    /*
+      ( m11   m12 )
+      (           )
+      ( m21   m22 )
+     */
+    complex m11;
+    complex m12;
+    complex m21;
+    complex m22;
+};
+
+
+// ----------------------------------------------------------------------------
 inline void simulate(
-    // cosine of insident angle
-    complex incidentCosTheta,
-    // wavelength of light (same unit as layers thickness)
-    double lamda,
-    // angle of polarization 0 mean S and pi/2 mean P polarization
-    double polarization,
-    // complex index of refraxion of insident medium
-    complex nIncident,
-    // complex index of refraxion of exit medium
-    complex nExit,
-    // array of layers : each layer is composed of 3 double
-    //                      (thickness, n, k) k is positive
-    // in the array the layers are presented from
-    //           the insident one to the exit one
-    std::vector<blitz::TinyVector<double, 3> > layers,
-    // pointer for reflectance
-    double *reflectance = 0,
-    // pointer for transmittance need ptr of reflectance != 0
-    double *transmittance = 0,
-    // pointer for absorptance need ptr of transmittance != 0
-    double *absorptance = 0,
-    // pointers of psi and delta, they are optional
-    double *psi = 0, double *delta = 0
-    )
+        // cosine of insident angle
+        complex incidentCosTheta,
+        // wavelength of light (same unit as layers thickness)
+        double lamda,
+        // angle of polarization 0 mean P and pi/2 mean S polarization
+        double polarization,
+        // complex index of refraxion of insident medium,
+        // k value must be nagative or null
+        complex nIncident,
+        // complex index of refraxion of exit medium,
+        // k value must be nagative or null
+        complex nExit,
+
+        // array of layers
+        // in the array the layers are presented from
+        //           the insident one to the exit one
+        std::vector<struct Layer> layers,
+
+        // pointer for reflectance
+        double *reflectance = 0,
+        // pointer for transmittance need ptr of reflectance != 0
+        double *transmittance = 0,
+        // pointer for absorptance need ptr of transmittance != 0
+        double *absorptance = 0,
+        // pointers of psi and delta, they are optional
+        double *psi = 0, double *delta = 0
+        )
 {
     // variables for optimization
     int layersAmount = layers.size();
@@ -196,55 +238,47 @@ inline void simulate(
     // ---------- 1.2 ----------
 
     // mains matrix, the product of each layer matrix
-    blitz::TinyMatrix<complex, 2, 2> productMatrixP;
-    blitz::TinyMatrix<complex, 2, 2> productMatrixS;
-
+    Matrix22 productMatrixP(1.0, 0.0, 0.0, 1.0);
+    Matrix22 productMatrixS(1.0, 0.0 ,0.0, 1.0);
     // initialized to Identity Matrix
-    productMatrixP =
-            1, 0,
-            0, 1;
+    /*
+      ( 1    0 )
+      (        )
+      ( 0    1 )
+     */
 
-    productMatrixS =
-            1, 0,
-            0, 1;
 
 
     // the matrix of the layer
-    blitz::TinyMatrix<complex, 2, 2> layerMatrixP;
-    blitz::TinyMatrix<complex, 2, 2> layerMatrixS;
+    Matrix22 layerMatrixP;
+    Matrix22 layerMatrixS;
 
-    // additional matrix for blitz library
-    // blitz is very susceptible
-    // he don't like A = product(A, B);
-    // he need A = product(B, C);
-    blitz::TinyMatrix<complex, 2, 2> matrixP;
-    blitz::TinyMatrix<complex, 2, 2> matrixS;
 
 
     // i : for each layer
     for (int i = 0; i < layersAmount; ++i) {
 
         // create complex number : n - ik
-        const complex layerRefractiveIndex(layers[i][1], -layers[i][2]);
+        //const complex layerRefractiveIndex(layers[i][1], -layers[i][2]);
 
         // snell law
         const complex squareN1 =
-                layerRefractiveIndex * layerRefractiveIndex;
+                layers[i].refractiveIndex * layers[i].refractiveIndex;
         const complex layerCosTheta =
                 sqrt(squareIncidentCosTheta * squareN0 - squareN0 + squareN1)
-                / layerRefractiveIndex;
+                / layers[i].refractiveIndex;
 
 
 
         // then calculate the admittance of the layer P and S
         const complex admittanceLayerP =
-                layerRefractiveIndex / layerCosTheta;
+                layers[i].refractiveIndex / layerCosTheta;
         const complex admittanceLayerS =
-                layerRefractiveIndex * layerCosTheta;
+                layers[i].refractiveIndex * layerCosTheta;
 
         // now the delta dephasing of the layer
         const complex deltaLayer =
-                2.0 * M_PI * layerRefractiveIndex * layers[i][0] * layerCosTheta / lamda;
+                2.0 * M_PI * layers[i].refractiveIndex * layers[i].thickness * layerCosTheta / lamda;
         // layers[i][0] is the thickness layer, is need to be the same unit of lamda
 
 
@@ -252,30 +286,23 @@ inline void simulate(
         const complex c = cos(deltaLayer);
         const complex s = sin(deltaLayer) * onei;
 
-        layerMatrixP =
-                c,                      s / admittanceLayerP,
-                s * admittanceLayerP,   c;
+        layerMatrixP.m11 = c;
+        layerMatrixP.m12 = s / admittanceLayerP;
+        layerMatrixP.m21 = s * admittanceLayerP;
+        layerMatrixP.m22 = c;
 
-        layerMatrixS =
-                c,                      s / admittanceLayerS,
-                s * admittanceLayerS,   c;
+
+        layerMatrixS.m11 = c;
+        layerMatrixS.m12 = s / admittanceLayerS;
+        layerMatrixS.m21 = s * admittanceLayerS;
+        layerMatrixS.m22 = c;
 
 
         // now we need to make the product of the main matrix with the layer matrix
 
         // do the matrix product
-        /*
-          A = product(A, B);   => don't works !
-
-          tmp = product(A, B);
-          A = tmp;             => works well !
-          */
-        matrixP = product(productMatrixP, layerMatrixP);
-        matrixS = product(productMatrixS, layerMatrixS);
-
-        productMatrixP = matrixP;
-        productMatrixS = matrixS;
-
+        productMatrixP = productMatrixP * layerMatrixP;
+        productMatrixS = productMatrixS * layerMatrixS;
     }
 
 
@@ -287,30 +314,14 @@ inline void simulate(
     // ------------------------------------------------------------------------
     // ----------  2  ----------
 
-    blitz::TinyMatrix<complex, 2, 1> exitMatrixP;
-    exitMatrixP =
-            1.0,
-            admittanceExitP;
-
-    blitz::TinyMatrix<complex, 2, 1> yMatrixP;
-    yMatrixP = product(productMatrixP, exitMatrixP);
-
-    const complex bP = yMatrixP(0, 0);
-    const complex cP = yMatrixP(1, 0);
+    const complex bP = productMatrixP.m11 + productMatrixP.m12 * admittanceExitP;
+    const complex cP = productMatrixP.m21 + productMatrixP.m22 * admittanceExitP;
 
 
 
+    const complex bS = productMatrixS.m11 + productMatrixS.m12 * admittanceExitS;
+    const complex cS = productMatrixS.m21 + productMatrixS.m22 * admittanceExitS;
 
-    blitz::TinyMatrix<complex, 2, 1> exitMatrixS;
-    exitMatrixS =
-            1.0,
-            admittanceExitS;
-
-    blitz::TinyMatrix<complex, 2, 1> yMatrixS;
-    yMatrixS = product(productMatrixS, exitMatrixS);
-
-    const complex bS = yMatrixS(0, 0);
-    const complex cS = yMatrixS(1, 0);
 
 
     // calculate the reflectance
@@ -329,8 +340,8 @@ inline void simulate(
         const double reflectanceS = norm(reflectionCoefficientS);
 
         // sin^2 + cos^2 = 1
-        double polP = sin(polarization);
-        double polS = cos(polarization);
+        double polP = cos(polarization);
+        double polS = sin(polarization);
         polP *= polP;
         polS *= polS;
 

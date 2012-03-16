@@ -82,7 +82,7 @@ qreal mathReflectivity(qreal e, const Parameters &p)
     const qreal epsilon1 = mathRealFun(e, p);
     const qreal epsilon2 = mathImagFun(e, p);
 
-    std::vector<blitz::TinyVector<double, 3> > layers;
+    std::vector<thinfilm::Layer> layers;
     qreal ref;
     thinfilm::simulate(1.0, 1240.0 / e, 45.0, 1.0, std::complex<double>(epsilon1, epsilon2), layers, &ref);
 
