@@ -1,6 +1,5 @@
 #Dependances
 qt
-libblitz-dev
 
 #Compiler un projet Qt:
 qmake ellipsofit.pro
