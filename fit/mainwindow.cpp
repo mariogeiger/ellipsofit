@@ -253,8 +253,7 @@ void MainWindow::checkUpdate(bool verbose)
     QBuffer *buffer = new QBuffer(&m_bufferData, m_http);
     if (buffer->open(QIODevice::ReadWrite))
         m_httpGetId = m_http->get(QString("http://setup.weeb.ch/update/ellipsofit.php%3Fversion=") +
-                                  QString::number(qApp->applicationVersion().remove('.').toInt()) +
-                                  QString("%26uname=") + username(), buffer);
+                                  QString::number(qApp->applicationVersion().remove('.').toInt()), buffer);
 
 }
 
