@@ -110,13 +110,13 @@ void OptionDialog::displayInfo()
 {
     QPushButton *p = qobject_cast<QPushButton *>(sender());
 
-    int st = -1;
+//    int st = -1;
     int id = -1;
 
     for (int s = 0; s < 2; ++s) {
         for (int i = 0; i < 7; ++i) {
             if (colorButtons[s][i] == p) {
-                st = s;
+//                st = s;
                 id = i;
             }
         }
