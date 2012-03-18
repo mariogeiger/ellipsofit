@@ -178,9 +178,10 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     m_http = 0;
-    QTime lastCheck = settings.value("last_check_update", 0).toTime();
-    qDebug() << lastCheck.secsTo(QTime::currentTime());
-    if (lastCheck.secsTo(QTime::currentTime()) > 12 * 3600)
+    QTime lastCheck = settings.value("last_check_update", QTime::currentTime()).toTime();
+    int second = lastCheck.secsTo(QTime::currentTime());
+    qDebug() << "seconds from last update check : " << second;
+    if (second > 12 * 3600 || second < 0)
         checkUpdate(false);
 
 
@@ -272,8 +273,8 @@ bool MainWindow::httpRequestFinishedSilent(int requestId, bool error)
                 qApp->quit();
             }
             qDebug() << "set new time";
-            QSettings().setValue("last_check_update", QTime::currentTime());
         }
+        QSettings().setValue("last_check_update", QTime::currentTime());
         m_http->deleteLater(); m_http = 0;
     }
     return u2d;
@@ -287,6 +288,7 @@ void MainWindow::httpRequestFinishedVerbose(int requestId, bool error)
         } else {
             if (httpRequestFinishedSilent(requestId, error))
                 QMessageBox::information(this, tr("Update"), tr("You have the last version !"));
+            QSettings().setValue("last_check_update", QTime::currentTime());
         }
         if (m_http)
             m_http->deleteLater(); m_http = 0;
