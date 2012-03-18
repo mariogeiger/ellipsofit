@@ -24,7 +24,7 @@ typedef struct {
 enum {
 	LaurEK = 0,
 	LaurFK = 1,
-	LaurGK = 2,
+    LaurGK = 2
 };
 
 typedef struct {

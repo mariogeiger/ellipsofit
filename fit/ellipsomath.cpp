@@ -11,6 +11,7 @@
 
 #include "ellipsomath.h"
 #include <cmath>
+#include <complex>
 
 
 
@@ -83,13 +84,13 @@ qreal mathReflectivity(qreal e, const Parameters &p)
     const qreal epsilon1 = mathRealFun(e, p);
     const qreal epsilon2 = mathImagFun(e, p);
 
-    const qreal tmp = std::sqrt(epsilon1*epsilon1 + epsilon2*epsilon2);
-    const qreal n = std::sqrt((tmp + epsilon1) / 2.0);
-    const qreal k = std::sqrt((tmp - epsilon1) / 2.0); //! http://www.jawoollam.com/dielectric_function.html
+    const std::complex<qreal> epsilon(epsilon1, epsilon2);
+    const std::complex<qreal> exit = std::sqrt(epsilon);
 
-    std::vector<thinfilm::Layer> layers;
+    const std::vector<thinfilm::Layer> layers;
+
     qreal ref;
-    thinfilm::simulate(1.0, 1240.0 / e, M_PI_4, 1.0, std::complex<double>(n, -k), layers, &ref);
+    thinfilm::simulate(1.0, 1240.0 / e, M_PI_4, 1.0, std::conj(exit), layers, &ref);
 
     return ref;
 }
