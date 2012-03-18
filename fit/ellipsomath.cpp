@@ -10,7 +10,7 @@
 */
 
 #include "ellipsomath.h"
-#include <math.h>
+#include <cmath>
 
 
 
@@ -34,7 +34,8 @@ qreal mathRealFun(qreal e, const Parameters &p)
 {
     qreal som = mathRealDrud(e, p.einf, p.ep, p.g);
     for (int i = 0; i < p.laurentians.size(); ++i)
-        som += mathRealLaurentian(e, p.laurentians[i].k[LaurEK],
+        som += mathRealLaurentian(e,
+                                  p.laurentians[i].k[LaurEK],
                                   p.laurentians[i].k[LaurFK],
                                   p.laurentians[i].k[LaurGK]);
     return som;
@@ -79,8 +80,12 @@ qreal mathImagFun(qreal e, const Parameters &p)
 
 qreal mathReflectivity(qreal e, const Parameters &p)
 {
-    const qreal n = mathRealFun(e, p);
-    const qreal k = mathImagFun(e, p);
+    const qreal epsilon1 = mathRealFun(e, p);
+    const qreal epsilon2 = mathImagFun(e, p);
+
+    const qreal tmp = std::sqrt(epsilon1*epsilon1 + epsilon2*epsilon2);
+    const qreal n = std::sqrt((tmp + epsilon1) / 2.0);
+    const qreal k = std::sqrt((tmp - epsilon1) / 2.0); //! http://www.jawoollam.com/dielectric_function.html
 
     std::vector<thinfilm::Layer> layers;
     qreal ref;
