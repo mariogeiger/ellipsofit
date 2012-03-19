@@ -84,12 +84,21 @@ qreal mathReflectivity(qreal e, const Parameters &p)
     const qreal epsilon1 = mathRealFun(e, p);
     const qreal epsilon2 = mathImagFun(e, p);
 
+    // calculate complex exit medium refractive index
     const std::complex<qreal> epsilon(epsilon1, epsilon2);
     const std::complex<qreal> exit = std::sqrt(epsilon);
 
+    // create an empty layers list
     const std::vector<thinfilm::Layer> layers;
 
     qreal ref;
+    // run function from thinfilm : 
+    // arguments : 1.0 = cos(theta) where theta is the angle of incidence (here theta = 0)
+    //      1240/e = wavelength in nm
+    //      M_PI_4 = pi/4 = angle of polarisation (0<=>parallel, pi/2<=>perpendicular, pi/4<=>average)
+    //      std::conj(exit) = n - ik (because here we need a negative Attenuation coefficient)
+    //      layers = (here is empty)
+    //      &ref = pointer to the output
     thinfilm::simulate(1.0, 1240.0 / e, M_PI_4, 1.0, std::conj(exit), layers, &ref);
 
     return ref;
